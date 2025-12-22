@@ -834,6 +834,7 @@
       }
       
       // === 6. بدء تحميل المحتويات الديناميكية ===
+      localStorage.removeItem('adClosed_fullscreen');
       loadAds(); // تحميل الإعلانات أولاً
       setTimeout(loadSuggestedGames, 1000); // ثم تحميل الألعاب المقترحة
   });
