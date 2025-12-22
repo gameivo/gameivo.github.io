@@ -1,0 +1,20 @@
+{
+  "banners": {
+    "aboveIframe": {
+      "enabled": true,
+      "html": "<div class=\"ad-banner ad-above-iframe\">\n  <div class=\"ad-label\">Advertisement</div>\n  <a href=\"YOUR_AD_LINK_HERE\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:block;text-align:center;\">\n    <img src=\"YOUR_BANNER_IMAGE_HERE\" \n         alt=\"Advertisement\" \n         style=\"width:100%;max-width:728px;height:90px;margin:0 auto;border-radius:5px;\">\n  </a>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>"
+    },
+    "belowIframe": {
+      "enabled": true,
+      "html": "<div class=\"ad-banner ad-below-iframe\">\n  <div class=\"ad-label\">Advertisement</div>\n  <a href=\"YOUR_AD_LINK_HERE\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:block;text-align:center;\">\n    <img src=\"YOUR_BANNER_IMAGE_HERE\" \n         alt=\"Advertisement\" \n         style=\"width:100%;max-width:728px;height:90px;margin:0 auto;border-radius:5px;\">\n  </a>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>"
+    },
+    "pageBottom": {
+      "enabled": true,
+      "html": "<div class=\"ad-banner ad-page-bottom\">\n  <div class=\"ad-label\">Advertisement</div>\n  <a href=\"YOUR_AD_LINK_HERE\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:block;text-align:center;\">\n    <img src=\"YOUR_BANNER_IMAGE_HERE\" \n         alt=\"Advertisement\" \n         style=\"width:100%;max-width:970px;height:250px;margin:20px auto;border-radius:8px;\">\n  </a>\n</div>"
+    }
+  },
+  "fullscreenAd": {
+    "enabled": true,
+    "html": "<div id=\"ad-banner\" style=\"position:absolute;top:0;left:0;width:100%;background:rgba(0,0,0,.85);color:#fff;padding:8px 12px;font-size:13px;z-index:9998;display:none;box-sizing:border-box\">\n  <div style=\"display:flex;justify-content:space-between;align-items:center;flex-direction:row-reverse\">\n    <span>Ad</span>\n    <button onclick=\"document.getElementById('ad-banner').style.display='none'\" style=\"background:#ff4444;color:#fff;border:none;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:11px;line-height:1\">✕</button>\n  </div>\n  <div style=\"margin-top:6px;text-align:center\">\n    <a href=\"https://tundrafile.com/1804505\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display: block; text-align: center;\">\n      <img src=\"https://tikmob.github.io/game/images/Gtaads.png\" alt=\"Ad\" style=\"width:100%;max-width:800px;height:auto;display:block;margin:0 auto\">\n    </a>\n  </div>\n</div>"
+  }
+}
