@@ -1,5 +1,31 @@
 [
   {
+  "id": "cricket-superstar-league",
+  "title": "Cricket Superstar League",
+  "description": "Play Cricket Superstar League online for free — a thrilling browser cricket game that puts you in the heart of fast-paced cricket action! Step onto the pitch as a cricket superstar, choose your team, master batting and bowling techniques, score boundaries, take wickets, and compete in exciting matches. With realistic cricket physics, dynamic stadiums, smooth gameplay, and multiple match types including leagues, tournaments, and challenge modes, Cricket Superstar League delivers an immersive free online sports experience. This unblocked cricket game is perfect for fans of cricket games, sports simulators, browser multiplayer sports, competitive league gaming, and free online action. Customize your players, upgrade skills, earn trophies, and dominate the leaderboard as you advance through seasons of high-stakes cricket battles. No download required — hit sixes, bowl Yorkers, lead your team to victory and become the ultimate cricket champion in Cricket Superstar League!",
+  "genre": "Sports, Cricket, Simulation, Multiplayer, Browser Game",
+  "thumbnail": "https://rowhub.github.io/game/images/111.png",
+  "iframe": "https://www.gogy.com/games/cricket-superstar-league-iframe"
+},
+ 
+{
+  "id": "meow-market",
+  "title": "Meow Market",
+  "description": "Play Meow Market online for free — a charming and casual browser market simulation game where you help a cute tabby cat run a lively vegetable shop! In this unblocked online game, you’ll click and match groups of vegetables to harvest produce, sell to adorable customers, manage your shop inventory, and upgrade your stall with better tools and decorations. Meow Market combines relaxing puzzle mechanics, strategic planning, shop management, and fun business growth challenges into one delightful experience. Perfect for fans of simulation games, casual puzzle games, clicker games, cat themed games, free browser games and online idle management titles. No download required — harvest veggies, serve customers, earn coins, unlock powerful upgrades, and build the best market in town in Meow Market!",
+  "genre": "Simulation, Casual, Puzzle, Clicker, Business, Browser Game",
+  "thumbnail": "https://rowhub.github.io/game/images/112.png",
+  "iframe": "https://html5.gamemonetize.co/4c155354cf9b470e994d99d9189cc2f5/?gd_sdk_referrer_url=https%3A%2F%2Fgamedistribution.com%2Fgames%2Fmeow-market%2F"
+},
+ 
+ {
+  "id": "math-duck",
+  "title": "Math Duck",
+  "description": "Play Math Duck online for free — a fun and educational math game that helps you sharpen your arithmetic skills while having a great time! In Math Duck, you’ll help a clever duck solve math problems by selecting the correct answers before time runs out. This unblocked browser game combines fast-paced quiz action, engaging visuals, and progressive difficulty levels that challenge players of all ages. Whether you’re practicing addition, subtraction, multiplication, or division, Math Duck offers an entertaining way to improve your math fluency, boost brain power, and learn while you play. Perfect for students, teachers, parents, and casual gamers who love educational games, learning challenges, brain games, classroom activities, free online games, and browser trivia fun. No download required — dive into quick rounds, beat your own high scores, and become the smartest duck on the leaderboard in Math Duck!",
+  "genre": "Educational, Puzzle, Casual, Brain Game, Learning",
+  "thumbnail": "https://rowhub.github.io/game/images/113.png",
+  "iframe": "https://www.calculators.org/games/math-duck/game.php"
+},
+  {
   "id": "punchers",
   "title": "Punchers",
   "description": "Play Punchers online for free and step into the ring of one of the most intense browser boxing games ever! In this unblocked WebGL fighting game you’ll face off in 3D arenas, choose your boxer, dodge powerful hooks, deliver devastating uppercuts, and battle it out with ragdoll physics for maximum impact. With both single-player and two‑player modes, realistic animations and combo mechanics that reward timing and precision, Punchers is perfect for fans of boxing games, 3D sports action, online multiplayer fights and free browser games. No download required — jump into the ring, master your footwork, land your knockout blow and claim victory in Punchers!",
