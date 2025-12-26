@@ -1,109 +1,154 @@
 {
-  "banners": {
+  "adSettings": {
+    "rotationEnabled": true,
+    "rotationDelay": 30,
+    "smartDelayEnabled": true,
+    "smartlinkEnabled": true,
+    "antiAdblockEnabled": true,
+    "deviceDetection": true,
+    "defaultRPM": 3,
+    "enableDebug": false
+  },
+  "adNetworks": {
+    "primary": {
+      "name": "HighPerformanceFormat",
+      "enabled": true,
+      "scriptUrl": "https://www.highperformanceformat.com/{adKey}/invoke.js"
+    }
+  },
+  "adTemplates": {
+    "banner468x60": {
+      "enabled": true,
+      "html": "<div class='ad-banner ad-468x60'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner468x60_key', 'format' : 'iframe', 'height' : 60, 'width' : 468, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner468x60_key/invoke.js'></script></div>"
+    },
+    "banner300x250": {
+      "enabled": true,
+      "html": "<div class='ad-banner ad-300x250'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner300x250_key', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner300x250_key/invoke.js'></script></div>"
+    },
+    "banner728x90": {
+      "enabled": true,
+      "html": "<div class='ad-banner ad-728x90'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner728x90_key', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner728x90_key/invoke.js'></script></div>"
+    },
+    "banner160x600": {
+      "enabled": true,
+      "html": "<div class='ad-banner ad-160x600'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner160x600_key', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner160x600_key/invoke.js'></script></div>"
+    },
+    "banner320x50": {
+      "enabled": true,
+      "html": "<div class='ad-banner ad-320x50'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner320x50_key', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner320x50_key/invoke.js'></script></div>"
+    },
+    "smartlink": {
+      "enabled": true,
+      "html": "<div class='ad-banner ad-smartlink'><div class='ad-label'>Smart Ad</div><div class='smartlink-content'><p>Click to discover amazing offers!</p><button onclick='window.open(\"https://example.com\", \"_blank\")'>Discover Now</button></div></div>"
+    },
+    "interstitial": {
+      "enabled": true,
+      "html": "<div id='interstitial-ad' style='display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;justify-content:center;align-items:center;'><div style='background:#fff;padding:20px;border-radius:10px;max-width:90%;max-height:90%;overflow:auto;text-align:center;'><div style='text-align:right;margin-bottom:10px;'><button onclick='closeInterstitial()' style='background:#ff4444;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;'>✕ Close</button></div><h3 style='color:#333;margin-bottom:15px;'>Special Offer!</h3><p style='color:#666;margin-bottom:20px;'>Check out this amazing opportunity!</p><a href='https://example.com' target='_blank' style='background:#6c5ce7;color:#fff;padding:10px 20px;border-radius:5px;text-decoration:none;display:inline-block;'>Learn More</a></div></div><script>function closeInterstitial(){document.getElementById('interstitial-ad').style.display='none';}setTimeout(function(){if(!localStorage.getItem('interstitial_shown')){document.getElementById('interstitial-ad').style.display='flex';localStorage.setItem('interstitial_shown','true');}}, 5000);</script>"
+    }
+  },
+  "adPositions": {
     "aboveIframe": {
       "enabled": true,
-      "html": "<div class=\"ad-banner ad-above-iframe\">\n  <div class=\"ad-label\">Advertisement</div>\n  <div id=\"hp-ad-728x90\"></div>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>",
-      "scripts": [
-        "<script>atOptions={key:'a29bc677676d4759eafbbf48bff57ae3',format:'iframe',height:90,width:728,params:{}};</script>",
-        "<script src=\"https://www.highperformanceformat.com/a29bc677676d4759eafbbf48bff57ae3/invoke.js\"></script>"
-      ]
+      "rotation": true,
+      "templates": [
+        "banner728x90",
+        "banner468x60"
+      ],
+      "deviceSpecific": {
+        "desktop": [
+          "banner728x90"
+        ],
+        "mobile": [
+          "banner320x50",
+          "banner300x250"
+        ],
+        "tablet": [
+          "banner728x90",
+          "banner300x250"
+        ]
+      }
     },
     "belowIframe": {
       "enabled": true,
-      "html": "<div class=\"ad-banner ad-below-iframe\">\n  <div class=\"ad-label\">Advertisement</div>\n  <div id=\"hp-ad-468x60\"></div>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>",
-      "scripts": [
-        "<script>atOptions={key:'b45f6c7e8d9e0f1a2b3c4d5e6f7a8b9c',format:'iframe',height:60,width:468,params:{}};</script>",
-        "<script src=\"https://www.highperformanceformat.com/b45f6c7e8d9e0f1a2b3c4d5e6f7a8b9c/invoke.js\"></script>"
-      ]
+      "rotation": true,
+      "templates": [
+        "banner728x90",
+        "smartlink"
+      ],
+      "deviceSpecific": {
+        "desktop": [
+          "banner728x90"
+        ],
+        "mobile": [
+          "banner300x250"
+        ],
+        "tablet": [
+          "banner728x90"
+        ]
+      }
+    },
+    "sidebar": {
+      "enabled": true,
+      "rotation": true,
+      "templates": [
+        "banner300x250",
+        "banner160x600",
+        "smartlink"
+      ],
+      "deviceSpecific": {
+        "desktop": [
+          "banner300x250",
+          "banner160x600"
+        ],
+        "mobile": [
+          "banner300x250"
+        ],
+        "tablet": [
+          "banner300x250"
+        ]
+      }
     },
     "pageBottom": {
       "enabled": true,
-      "html": "<div class=\"ad-banner ad-page-bottom\">\n  <div class=\"ad-label\">Advertisement</div>\n  <div id=\"hp-ad-970x250\"></div>\n</div>",
-      "scripts": [
-        "<script>atOptions={key:'c56d7e8f9a0b1c2d3e4f5a6b7c8d9e0f',format:'iframe',height:250,width:970,params:{}};</script>",
-        "<script src=\"https://www.highperformanceformat.com/c56d7e8f9a0b1c2d3e4f5a6b7c8d9e0f/invoke.js\"></script>"
-      ]
-    }
-  },
-  "fullscreenAd": {
-    "enabled": true,
-    "html": "<div id=\"ad-banner\" style=\"position:absolute;top:0;left:0;width:100%;background:rgba(0,0,0,.85);color:#fff;padding:8px 12px;font-size:13px;z-index:9998;display:none;box-sizing:border-box\">\n  <div style=\"display:flex;justify-content:space-between;align-items:center;flex-direction:row-reverse\">\n    <span>Ad</span>\n    <button onclick=\"document.getElementById('ad-banner').style.display='none'\" style=\"background:#ff4444;color:#fff;border:none;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:11px;line-height:1\">✕</button>\n  </div>\n  <div style=\"margin-top:6px;text-align:center\">\n    <a href=\"https://tundrafile.com/1804505\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display: block; text-align: center;\">\n      <img src=\"https://rowhub.github.io/images/Gtaads.png\" alt=\"Ad\" style=\"width:100%;max-width:800px;height:auto;display:block;margin:0 auto\">\n    </a>\n  </div>\n</div>"
-  },
-  "sidebarAd": {
-    "enabled": true,
-    "html": "<div class=\"ad-banner ad-sidebar\">\n  <div class=\"ad-label\">Sponsored</div>\n  <div id=\"hp-ad-300x250\"></div>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>",
-    "scripts": [
-      "<script>atOptions={key:'d67e8f9a0b1c2d3e4f5a6b7c8d9e0f1a',format:'iframe',height:250,width:300,params:{}};</script>",
-      "<script src=\"https://www.highperformanceformat.com/d67e8f9a0b1c2d3e4f5a6b7c8d9e0f1a/invoke.js\"></script>"
-    ]
-  },
-  "interstitialAd": {
-    "enabled": true,
-    "html": "<div id=\"interstitial-ad\" style=\"position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;\">\n  <div style=\"background:white;padding:20px;border-radius:10px;max-width:600px;max-height:80vh;overflow-y:auto;\">\n    <div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;\">\n      <h3 style=\"margin:0;color:#333;\">Advertisement</h3>\n      <button onclick=\"document.getElementById('interstitial-ad').style.display='none'\" style=\"background:#ff4444;color:#fff;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;\">Close</button>\n    </div>\n    <div class=\"smartlink-ad\" onclick=\"window.open('https://smartlink.example.com/click', '_blank');\" style=\"cursor:pointer;text-align:center;\">\n      <img src=\"https://via.placeholder.com/600x400/1a2a6c/ffffff?text=Smartlink+Ad\" alt=\"Smartlink Ad\" style=\"width:100%;border-radius:5px;\">\n      <p style=\"text-align:center;margin-top:10px;color:#666;font-weight:bold;\">🎮 Click to Continue Playing!</p>\n    </div>\n  </div>\n</div>"
-  },
-  "additionalBanners": {
-    "sidebarVertical": {
-      "enabled": true,
-      "html": "<div class=\"ad-banner ad-sidebar\">\n  <div class=\"ad-label\">Advertisement</div>\n  <div id=\"hp-ad-160x600\"></div>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>",
-      "scripts": [
-        "<script>atOptions={key:'e78f9a0b1c2d3e4f5a6b7c8d9e0f1a2b',format:'iframe',height:600,width:160,params:{}};</script>",
-        "<script src=\"https://www.highperformanceformat.com/e78f9a0b1c2d3e4f5a6b7c8d9e0f1a2b/invoke.js\"></script>"
-      ]
-    },
-    "mobileLeaderboard": {
-      "enabled": true,
-      "html": "<div class=\"ad-banner\" style=\"margin:10px 0;\">\n  <div class=\"ad-label\">Ad</div>\n  <div id=\"hp-ad-320x50\"></div>\n</div>",
-      "scripts": [
-        "<script>atOptions={key:'f89a0b1c2d3e4f5a6b7c8d9e0f1a2b3c',format:'iframe',height:50,width:320,params:{}};</script>",
-        "<script src=\"https://www.highperformanceformat.com/f89a0b1c2d3e4f5a6b7c8d9e0f1a2b3c/invoke.js\"></script>"
-      ]
-    },
-    "wideSkyscraper": {
-      "enabled": true,
-      "html": "<div class=\"ad-banner ad-sidebar\">\n  <div class=\"ad-label\">Sponsored</div>\n  <div id=\"hp-ad-160x300\"></div>\n  <button class=\"ad-close-btn\" onclick=\"this.parentElement.style.display='none'\">✕</button>\n</div>",
-      "scripts": [
-        "<script>atOptions={key:'g90a1b2c3d4e5f6a7b8c9d0e1f2a3b4c',format:'iframe',height:300,width:160,params:{}};</script>",
-        "<script src=\"https://www.highperformanceformat.com/g90a1b2c3d4e5f6a7b8c9d0e1f2a3b4c/invoke.js\"></script>"
-      ]
-    }
-  },
-  "smartlinkAds": {
-    "interstitial": {
-      "enabled": true,
-      "html": "<div class=\"smartlink-ad\" onclick=\"window.location.href='https://smartlink.example.com/redirect?ref='+Date.now();\" style=\"cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:25px;border-radius:12px;text-align:center;margin:20px;box-shadow:0 10px 30px rgba(0,0,0,0.3);\">\n  <div style=\"font-size:24px;margin-bottom:10px;\">🎮</div>\n  <h3 style=\"margin:0 0 10px 0;font-size:22px;\">Ready to Play?</h3>\n  <p style=\"margin:0 0 15px 0;opacity:0.9;\">Click to continue to the best gaming experience!</p>\n  <div style=\"background:white;color:#667eea;padding:10px 25px;border-radius:25px;display:inline-block;font-weight:bold;font-size:16px;\">CLICK HERE →</div>\n</div>"
-    },
-    "popunder": {
-      "enabled": true,
-      "html": "<div class=\"smartlink-popunder\" onclick=\"window.open('https://popunder.example.com','_blank');window.focus();\" style=\"cursor:pointer;background:#f8f9fa;border:2px dashed #dee2e6;padding:15px;border-radius:8px;text-align:center;margin:10px;\">\n  <p style=\"margin:0;color:#495057;font-size:14px;\">👈 <strong>Recommended:</strong> Discover amazing games!</p>\n</div>"
-    },
-    "redirect": {
-      "enabled": true,
-      "html": "<div class=\"smartlink-redirect\" onclick=\"window.location.href='https://redirect.example.com/landing?source='+encodeURIComponent(window.location.href);\" style=\"cursor:pointer;background:#4CAF50;color:white;padding:15px;border-radius:8px;text-align:center;margin:15px 0;\">\n  <div style=\"display:flex;align-items:center;justify-content:center;gap:10px;\">\n    <span style=\"font-size:20px;\">🚀</span>\n    <span style=\"font-weight:bold;font-size:18px;\">Instant Game Access</span>\n  </div>\n  <p style=\"margin:10px 0 0 0;font-size:14px;opacity:0.9;\">Click to play immediately!</p>\n</div>"
-    }
-  },
-  "settings": {
-    "rotation": {
-      "enabled": true,
-      "interval": 30000
-    },
-    "deviceBased": {
-      "mobile": {
-        "showBanners": ["320x50", "300x250", "468x60"],
-        "showSmartlinks": true
-      },
-      "desktop": {
-        "showBanners": ["728x90", "970x250", "300x250", "160x600"],
-        "showSmartlinks": true
-      },
-      "tablet": {
-        "showBanners": ["728x90", "468x60", "300x250"],
-        "showSmartlinks": true
+      "rotation": true,
+      "templates": [
+        "banner728x90",
+        "banner468x60"
+      ],
+      "deviceSpecific": {
+        "desktop": [
+          "banner728x90"
+        ],
+        "mobile": [
+          "banner320x50"
+        ],
+        "tablet": [
+          "banner728x90"
+        ]
       }
     },
-    "delays": {
-      "pageLoad": 1000,
-      "betweenAds": 2000,
-      "interstitial": 5000
+    "interstitial": {
+      "enabled": true,
+      "rotation": true,
+      "delaySeconds": 30,
+      "showOnExit": true,
+      "maxPerSession": 2
     }
+  },
+  "antiAdblock": {
+    "enabled": true,
+    "message": "Please consider disabling your ad blocker to support our free service",
+    "fallbackAd": "<div class='anti-adblock-message'><h3>Support Our Site</h3><p>Ads help us keep the games free for everyone. Please consider whitelisting our site.</p><button onclick='this.parentElement.style.display=\"none\";' style='background:#fff;color:#333;border:none;padding:8px 16px;border-radius:4px;margin-top:10px;cursor:pointer;'>I Understand</button></div>"
+  },
+  "smartlinkSettings": {
+    "enabled": true,
+    "provider": "custom",
+    "fallback": "banner300x250"
+  },
+  "performance": {
+    "lazyLoadAds": true,
+    "delayLoadSeconds": 2,
+    "maxConcurrentAds": 3,
+    "cacheAds": true
   }
 }
