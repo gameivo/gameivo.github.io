@@ -1,0 +1,254 @@
+{
+  "config": {
+    "rotation": {
+      "enabled": true,
+      "interval": 30000,
+      "comment": "تدوير الإعلانات كل 30 ثانية (30000ms)"
+    },
+    "smartDelay": {
+      "enabled": true,
+      "delayBeforeFirstAd": 1000,
+      "delayBetweenAds": 2000,
+      "comment": "تأخير محسّن: 1 ثانية قبل أول إعلان، 2 ثواني بين الإعلانات"
+    },
+    "antiAdblock": {
+      "enabled": true,
+      "message": "⚠️ Please disable AdBlock to support free games! Ads help keep our service free.",
+      "redirectUrl": null,
+      "showOnlyOnce": true,
+      "comment": "نظام Anti-Adblock محسّن - يظهر رسالة لطيفة"
+    }
+  },
+  
+  "popunder": {
+    "enabled": true,
+    "frequency": "once_per_session",
+    "delay": 8000,
+    "scripts": [
+      "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js"
+    ],
+    "comment": "Popunder Script - يظهر بعد 8 ثواني مرة واحدة في الجلسة"
+  },
+  
+  "nativeBanner": {
+    "enabled": true,
+    "position": "sidebar-top",
+    "script": "https://pl28343658.effectivegatecpm.com/576ef3ebcc3bae2383642673940c2ab2/invoke.js",
+    "containerId": "container-576ef3ebcc3bae2383642673940c2ab2",
+    "html": "<div id='container-576ef3ebcc3bae2383642673940c2ab2'></div>",
+    "comment": "Native Banner - يظهر في أعلى الشريط الجانبي"
+  },
+  
+  "banners": {
+    "aboveIframe": {
+      "enabled": true,
+      "rotation": true,
+      "rotationInterval": 30000,
+      "ads": [
+        {
+          "id": "banner-728x90-top",
+          "size": "728x90",
+          "script": "https://www.highperformanceformat.com/a29bc677676d4759eafbbf48bff57ae3/invoke.js",
+          "config": {
+            "key": "a29bc677676d4759eafbbf48bff57ae3",
+            "format": "iframe",
+            "height": 90,
+            "width": 728,
+            "params": {},
+            "container": "banner-728x90-top-container"
+          }
+        },
+        {
+          "id": "banner-468x60-top",
+          "size": "468x60",
+          "script": "https://www.highperformanceformat.com/b07536416d988628a30c9fd13c94a851/invoke.js",
+          "config": {
+            "key": "b07536416d988628a30c9fd13c94a851",
+            "format": "iframe",
+            "height": 60,
+            "width": 468,
+            "params": {},
+            "container": "banner-468x60-top-container"
+          }
+        }
+      ],
+      "fallbackHtml": "<div class='ad-banner' style='background:linear-gradient(135deg,#1a2a6c,#b21f1f);padding:20px;border-radius:10px;text-align:center;'><div class='ad-label'>Ad</div><h4 style='color:#ffd700;margin:10px 0;'>Premium Game Hosting</h4><p style='color:rgba(255,255,255,0.8);'>Fast, reliable HTML5 game hosting</p><a href='https://example.com' target='_blank' style='display:inline-block;background:#6c5ce7;color:white;padding:8px 20px;border-radius:5px;text-decoration:none;margin-top:10px;'>Learn More</a></div>",
+      "comment": "إعلانات فوق iframe - تدوير بين 728x90 و 468x60 مع فولباك"
+    },
+    
+    "belowIframe": {
+      "enabled": true,
+      "rotation": true,
+      "rotationInterval": 25000,
+      "ads": [
+        {
+          "id": "banner-320x50-bottom",
+          "size": "320x50",
+          "script": "https://www.highperformanceformat.com/af340b221e82600db1aeec2c3bd2cd9c/invoke.js",
+          "config": {
+            "key": "af340b221e82600db1aeec2c3bd2cd9c",
+            "format": "iframe",
+            "height": 50,
+            "width": 320,
+            "params": {},
+            "container": "banner-320x50-bottom-container"
+          }
+        },
+        {
+          "id": "banner-300x250-bottom",
+          "size": "300x250",
+          "script": "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
+          "config": {
+            "key": "c84b7f14ef2b488fb99e7411123accf1",
+            "format": "iframe",
+            "height": 250,
+            "width": 300,
+            "params": {},
+            "container": "banner-300x250-bottom-container"
+          }
+        }
+      ],
+      "fallbackHtml": "<div class='ad-banner' style='background:linear-gradient(135deg,#b21f1f,#fdbb2d);padding:20px;border-radius:10px;text-align:center;'><div class='ad-label'>Ad</div><h4 style='color:white;margin:10px 0;'>Play More Games</h4><p style='color:rgba(255,255,255,0.8);'>Discover thousands of free HTML5 games</p><a href='https://rowhub.github.io' style='display:inline-block;background:#1a2a6c;color:white;padding:8px 20px;border-radius:5px;text-decoration:none;margin-top:10px;'>Browse All Games</a></div>",
+      "comment": "إعلانات تحت iframe - تدوير بين 320x50 و 300x250 مع فولباك"
+    },
+    
+    "pageBottom": {
+      "enabled": true,
+      "rotation": false,
+      "ads": [
+        {
+          "id": "banner-728x90-bottom",
+          "size": "728x90",
+          "script": "https://www.highperformanceformat.com/a29bc677676d4759eafbbf48bff57ae3/invoke.js",
+          "config": {
+            "key": "a29bc677676d4759eafbbf48bff57ae3",
+            "format": "iframe",
+            "height": 90,
+            "width": 728,
+            "params": {},
+            "container": "banner-728x90-bottom-container"
+          }
+        }
+      ],
+      "fallbackHtml": "<div class='ad-banner ad-page-bottom' style='background:linear-gradient(135deg,#fdbb2d,#1a2a6c);padding:25px;border-radius:12px;text-align:center;margin:30px 0;'><div class='ad-label'>Support Us</div><h3 style='color:white;margin:15px 0;'>Enjoying Free Games?</h3><p style='color:rgba(255,255,255,0.9);margin-bottom:20px;max-width:600px;margin-left:auto;margin-right:auto;'>Please consider disabling AdBlock to support our free service. Ads help us keep the games running without fees.</p><div style='display:flex;justify-content:center;gap:15px;flex-wrap:wrap;'><a href='https://example.com/donate' target='_blank' style='display:inline-block;background:#ffd700;color:#333;padding:10px 25px;border-radius:5px;text-decoration:none;font-weight:bold;'>Support Now</a><a href='https://rowhub.github.io' style='display:inline-block;background:rgba(255,255,255,0.2);color:white;padding:10px 25px;border-radius:5px;text-decoration:none;'>More Games</a></div></div>",
+      "comment": "إعلان أسفل الصفحة - بانر 728x90 مع فولباك محسّن"
+    }
+  },
+  
+  "fullscreenAd": {
+    "enabled": true,
+    "triggerOn": "fullscreen_enter",
+    "closeable": true,
+    "closeDelay": 5000,
+    "rotation": false,
+    "ads": [
+      {
+        "id": "fullscreen-banner",
+        "script": "https://www.highperformanceformat.com/a29bc677676d4759eafbbf48bff57ae3/invoke.js",
+        "config": {
+          "key": "a29bc677676d4759eafbbf48bff57ae3",
+          "format": "iframe",
+          "height": 90,
+          "width": 728
+        }
+      }
+    ],
+    "comment": "إعلان عند التكبير - بانر 728x90 يظهر لمدة 5 ثواني"
+  },
+  
+  "sidebarAd": {
+    "enabled": true,
+    "rotation": true,
+    "rotationInterval": 40000,
+    "ads": [
+      {
+        "id": "sidebar-160x300",
+        "size": "160x300",
+        "script": "https://www.highperformanceformat.com/77500fee8ec2644cacc4361ea5fac945/invoke.js",
+        "config": {
+          "key": "77500fee8ec2644cacc4361ea5fac945",
+          "format": "iframe",
+          "height": 300,
+          "width": 160,
+          "params": {},
+          "container": "sidebar-160x300-container"
+        }
+      },
+      {
+        "id": "sidebar-160x600",
+        "size": "160x600",
+        "script": "https://www.highperformanceformat.com/c4bc6a456a9544ff74b98a472c52ea91/invoke.js",
+        "config": {
+          "key": "c4bc6a456a9544ff74b98a472c52ea91",
+          "format": "iframe",
+          "height": 600,
+          "width": 160,
+          "params": {},
+          "container": "sidebar-160x600-container"
+        }
+      }
+    ],
+    "fallbackHtml": "<div class='ad-banner' style='background:rgba(0,0,0,0.8);border-radius:10px;padding:20px;text-align:center;position:sticky;top:100px;'><div class='ad-label'>Sponsored</div><h4 style='color:#3CF7DC;margin:15px 0;'>Game Development</h4><p style='color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:20px;'>Learn how to create your own HTML5 games</p><a href='https://example.com/learn' target='_blank' style='display:inline-block;background:#6c5ce7;color:white;padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;'>Start Learning</a></div>",
+    "comment": "إعلانات الشريط الجانبي - تدوير بين 160x300 و 160x600 كل 40 ثانية مع فولباك"
+  },
+  
+  "interstitialAd": {
+    "enabled": false,
+    "frequency": "every_3_pages",
+    "delay": 15000,
+    "closeable": true,
+    "closeDelay": 7000,
+    "html": "<div style='text-align:center;'><h2 style='color:#333;margin-bottom:20px;'>Advertisement</h2><p style='color:#666;margin-bottom:20px;'>Please watch this short ad to support our free game service</p><div id='interstitial-content' style='min-height:300px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;border-radius:8px;'><p style='color:#999;'>Ad content loading...</p></div><div style='margin-top:20px;color:#999;font-size:14px;'>Closing in <span id='countdown'>7</span> seconds</div></div>",
+    "script": "https://www.highperformanceformat.com/a29bc677676d4759eafbbf48bff57ae3/invoke.js",
+    "comment": "Interstitial معطل حالياً - يمكن تفعيله عند الحاجة"
+  },
+  
+  "socialBar": {
+    "enabled": false,
+    "position": "bottom",
+    "sticky": true,
+    "html": "<div style='display:flex;justify-content:center;align-items:center;gap:20px;padding:10px;background:rgba(0,0,0,0.9);'><span style='color:#aaa;font-size:14px;'>Follow us:</span><a href='https://twitter.com/FreePlayHub' target='_blank' style='color:#1DA1F2;text-decoration:none;'><i>𝕏</i> Twitter</a><a href='https://facebook.com/FreePlayHub' target='_blank' style='color:#4267B2;text-decoration:none;'>Facebook</a><a href='https://discord.gg/freeplayhub' target='_blank' style='color:#5865F2;text-decoration:none;'>Discord</a></div>",
+    "comment": "Social Bar معطل حالياً - يمكن تفعيله عند الحاجة"
+  },
+  
+  "smartlink": {
+    "enabled": true,
+    "detectDevice": true,
+    "url": "https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4",
+    "triggerOn": "game_load",
+    "frequency": "once_per_session",
+    "openInNewTab": true,
+    "delay": 2000,
+    "comment": "Smartlink - يفتح تلقائياً بعد 2 ثواني من تحميل اللعبة (مرة واحدة في الجلسة)"
+  },
+  
+  "customAds": {
+    "enabled": false,
+    "comment": "إعلانات مخصصة - معطلة حالياً، يمكن إضافة إعلانات HTML مخصصة هنا"
+  },
+  
+  "instructions": {
+    "ar": "📋 تعليمات الاستخدام - النسخة المحسنة:",
+    "features": [
+      "✅ جميع الإعلانات تعمل مع نظام فولباك مدمج",
+      "✅ إصلاح مشكلة البانر الأسود في أسفل الصفحة",
+      "✅ تحسين سرعة تحميل إعلانات فوق وتحت الـ iframe",
+      "✅ إصلاح مشكلة Smartlink - يعمل الآن بشكل صحيح",
+      "✅ نظام تدوير محسّن مع إعادة محاولة تلقائية",
+      "✅ تجاهل أخطاء Unity تلقائياً",
+      "✅ فحص وإصلاح الحاويات المفقودة تلقائياً"
+    ],
+    "troubleshooting": [
+      "🔧 إذا لم يظهر إعلان: سيعرض فولباك تلقائياً",
+      "🔧 Smartlink: يفتح بعد 2 ثواني من تحميل اللعبة",
+      "🔧 البانر الأسود: تم إصلاحه بإضافة فولباك",
+      "🔧 أخطاء Unity: يتم تجاهلها تلقائياً"
+    ],
+    "notes": [
+      "🎯 النظام الآن أكثر استقراراً",
+      "⚡ تحميل أسرع للإعلانات",
+      "🔄 تدوير ذكي مع فولباك",
+      "📱 متوافق مع جميع الأجهزة"
+    ]
+  }
+}
