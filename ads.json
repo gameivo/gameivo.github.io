@@ -7,9 +7,9 @@
     },
     "smartDelay": {
       "enabled": true,
-      "delayBeforeFirstAd": 2000,
-      "delayBetweenAds": 3000,
-      "comment": "تأخير ذكي: 2 ثانية قبل أول إعلان، 3 ثواني بين الإعلانات"
+      "delayBeforeFirstAd": 0,
+      "delayBetweenAds": 100,
+      "comment": "ظهور فوري - 0 ثانية قبل أول إعلان، 100ms بين الإعلانات"
     },
     "antiAdblock": {
       "enabled": true,
@@ -20,14 +20,14 @@
   },
   
   "popunder": {
-    "enabled": false,
+    "enabled": true,
     "frequency": "once_per_session",
-    "delay": 3000,
+    "delay": 1000,
     "scripts": [
       "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js",
       "https://pl28343660.effectivegatecpm.com/d3/01/ff/d301ff1e4475b527cf2dccff540822e5.js"
     ],
-    "comment": "Popunder Scripts - يتم تحميلها تلقائياً"
+    "comment": "Popunder - يعمل بعد 1 ثانية فقط"
   },
   
   "nativeBanner": {
