@@ -7,148 +7,192 @@
     "antiAdblockEnabled": true,
     "deviceDetection": true,
     "defaultRPM": 3,
-    "enableDebug": false
+    "enableDebug": true
   },
-  "adNetworks": {
-    "primary": {
-      "name": "HighPerformanceFormat",
+  
+  "adUnits": {
+    "popunder": {
       "enabled": true,
-      "scriptUrl": "https://www.highperformanceformat.com/{adKey}/invoke.js"
-    }
-  },
-  "adTemplates": {
+      "type": "popunder",
+      "html": "<script type='text/javascript'>atOptions = { 'key' : 'YOUR_POPUNDER_KEY', 'format' : 'iframe', 'height' : 1, 'width' : 1, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/YOUR_POPUNDER_KEY/invoke.js\"></scr' + 'ipt>');</script>"
+    },
+    
     "banner468x60": {
       "enabled": true,
-      "html": "<div class='ad-banner ad-468x60'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner468x60_key', 'format' : 'iframe', 'height' : 60, 'width' : 468, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner468x60_key/invoke.js'></script></div>"
+      "type": "banner",
+      "size": "468x60",
+      "html": "<div class='ad-banner ad-468x60'><div class='ad-label'>Ad</div><script type='text/javascript'>atOptions = { 'key' : 'af340b221e82600db1aeec2c3bd2cd9c', 'format' : 'iframe', 'height' : 60, 'width' : 468, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/af340b221e82600db1aeec2c3bd2cd9c/invoke.js\"></scr' + 'ipt>');</script></div>"
     },
+    
     "banner300x250": {
       "enabled": true,
-      "html": "<div class='ad-banner ad-300x250'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner300x250_key', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner300x250_key/invoke.js'></script></div>"
+      "type": "banner",
+      "size": "300x250",
+      "html": "<div class='ad-banner ad-300x250'><div class='ad-label'>Ad</div><script type='text/javascript'>atOptions = { 'key' : 'YOUR_300x250_KEY', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/YOUR_300x250_KEY/invoke.js\"></scr' + 'ipt>');</script></div>"
     },
-    "banner728x90": {
+    
+    "banner160x300": {
       "enabled": true,
-      "html": "<div class='ad-banner ad-728x90'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner728x90_key', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner728x90_key/invoke.js'></script></div>"
+      "type": "banner",
+      "size": "160x300",
+      "html": "<div class='ad-banner ad-160x300'><div class='ad-label'>Ad</div><script type='text/javascript'>atOptions = { 'key' : 'YOUR_160x300_KEY', 'format' : 'iframe', 'height' : 300, 'width' : 160, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/YOUR_160x300_KEY/invoke.js\"></scr' + 'ipt>');</script></div>"
     },
+    
     "banner160x600": {
       "enabled": true,
-      "html": "<div class='ad-banner ad-160x600'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner160x600_key', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner160x600_key/invoke.js'></script></div>"
+      "type": "banner",
+      "size": "160x600",
+      "html": "<div class='ad-banner ad-160x600'><div class='ad-label'>Ad</div><script type='text/javascript'>atOptions = { 'key' : 'YOUR_160x600_KEY', 'format' : 'iframe', 'height' : 600, 'width' : 160, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/YOUR_160x600_KEY/invoke.js\"></scr' + 'ipt>');</script></div>"
     },
+    
     "banner320x50": {
       "enabled": true,
-      "html": "<div class='ad-banner ad-320x50'><div class='ad-label'>Ad</div><script>atOptions = { 'key' : 'banner320x50_key', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };</script><script src='https://www.highperformanceformat.com/banner320x50_key/invoke.js'></script></div>"
+      "type": "banner",
+      "size": "320x50",
+      "html": "<div class='ad-banner ad-320x50'><div class='ad-label'>Ad</div><script type='text/javascript'>atOptions = { 'key' : 'af340b221e82600db1aeec2c3bd2cd9c', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/af340b221e82600db1aeec2c3bd2cd9c/invoke.js\"></scr' + 'ipt>');</script></div>"
     },
+    
+    "banner728x90": {
+      "enabled": true,
+      "type": "banner",
+      "size": "728x90",
+      "html": "<div class='ad-banner ad-728x90'><div class='ad-label'>Ad</div><script type='text/javascript'>atOptions = { 'key' : 'YOUR_728x90_KEY', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/YOUR_728x90_KEY/invoke.js\"></scr' + 'ipt>');</script></div>"
+    },
+    
     "smartlink": {
       "enabled": true,
-      "html": "<div class='ad-banner ad-smartlink'><div class='ad-label'>Smart Ad</div><div class='smartlink-content'><p>Click to discover amazing offers!</p><button onclick='window.open(\"https://example.com\", \"_blank\")'>Discover Now</button></div></div>"
+      "type": "smartlink",
+      "url": "https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4",
+      "html": "<div class='ad-banner ad-smartlink'><div class='ad-label'>Sponsored</div><a href='https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4' target='_blank' onclick='trackSmartlinkClick()' style='display:block;text-align:center;padding:15px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;border-radius:8px;text-decoration:none;font-weight:bold;margin:10px 0;'>🎮 Discover Amazing Games - Click Here!</a><p style='text-align:center;font-size:12px;color:#888;margin-top:5px;'>Best gaming offers</p></div>"
     },
-    "interstitial": {
+    
+    "socialBar": {
+      "enabled": false,
+      "type": "social",
+      "html": "<script type='text/javascript'>atOptions = { 'key' : 'YOUR_SOCIAL_KEY', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} }; document.write('<scr' + 'ipt type=\"text/javascript\" src=\"//www.highperformanceformat.com/YOUR_SOCIAL_KEY/invoke.js\"></scr' + 'ipt>');</script>"
+    },
+    
+    "nativeBanner": {
+      "enabled": false,
+      "type": "native",
+      "html": "<div class='ad-native'><div class='native-ad-label'>Sponsored</div><div class='native-content'><h4>Amazing Game Offers</h4><p>Discover the best gaming deals online</p><a href='https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4' target='_blank' class='native-link'>Learn More →</a></div></div>"
+    },
+    
+    "interstitialAd": {
       "enabled": true,
-      "html": "<div id='interstitial-ad' style='display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:999999;justify-content:center;align-items:center;'><div style='background:#fff;padding:20px;border-radius:10px;max-width:90%;max-height:90%;overflow:auto;text-align:center;'><div style='text-align:right;margin-bottom:10px;'><button onclick='closeInterstitial()' style='background:#ff4444;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;'>✕ Close</button></div><h3 style='color:#333;margin-bottom:15px;'>Special Offer!</h3><p style='color:#666;margin-bottom:20px;'>Check out this amazing opportunity!</p><a href='https://example.com' target='_blank' style='background:#6c5ce7;color:#fff;padding:10px 20px;border-radius:5px;text-decoration:none;display:inline-block;'>Learn More</a></div></div><script>function closeInterstitial(){document.getElementById('interstitial-ad').style.display='none';}setTimeout(function(){if(!localStorage.getItem('interstitial_shown')){document.getElementById('interstitial-ad').style.display='flex';localStorage.setItem('interstitial_shown','true');}}, 5000);</script>"
+      "type": "interstitial",
+      "html": "<div id='interstitial-ad' style='display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.97);z-index:2147483647;display:flex;justify-content:center;align-items:center;font-family:Arial,sans-serif;'><div style='background:#fff;border-radius:12px;overflow:hidden;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;'><div style='position:absolute;top:10px;right:10px;z-index:10;'><button onclick=\"closeInterstitial();\" style='background:#ff4444;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;'>✕</button></div><div style='padding:30px;text-align:center;'><h2 style='color:#333;margin-bottom:15px;font-size:24px;'>🎮 Special Gaming Offer!</h2><p style='color:#666;margin-bottom:25px;font-size:16px;line-height:1.5;'>Check out these amazing game deals and exclusive offers!</p><a href='https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4' target='_blank' onclick='trackInterstitialClick()' style='background:linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);color:#fff;padding:12px 30px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;display:inline-block;transition:transform 0.2s;'>Discover Now</a><p style='font-size:12px;color:#999;margin-top:15px;'>Advertisement</p></div></div></div>"
+    },
+    
+    "fullscreenAd": {
+      "enabled": true,
+      "type": "fullscreen",
+      "html": "<div id='fullscreen-ad-banner' style='position:absolute;top:0;left:0;width:100%;background:linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(26,42,108,0.95) 100%);color:#fff;padding:12px 15px;font-size:14px;z-index:9998;display:none;box-sizing:border-box;border-bottom:2px solid #6c5ce7;'><div style='display:flex;justify-content:space-between;align-items:center;'><span style='color:#a29bfe;font-weight:bold;'>ADVERTISEMENT</span><button onclick=\"closeFullscreenAd();\" style='background:#ff4444;color:#fff;border:none;width:25px;height:25px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background 0.3s;'>✕</button></div><div style='margin-top:10px;text-align:center;'><a href='https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4' target='_blank' onclick='trackFullscreenAdClick()' style='display:block;text-align:center;padding:8px;background:rgba(255,255,255,0.1);border-radius:6px;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,0.2);transition:background 0.3s;'><span style='color:#a29bfe;font-weight:bold;'>⬇️</span> Click for Amazing Game Deals <span style='color:#a29bfe;font-weight:bold;'>⬇️</span></a></div></div>"
     }
   },
+  
   "adPositions": {
     "aboveIframe": {
       "enabled": true,
       "rotation": true,
-      "templates": [
-        "banner728x90",
-        "banner468x60"
-      ],
+      "delay": 0,
+      "adUnits": ["banner728x90", "banner468x60", "smartlink"],
       "deviceSpecific": {
-        "desktop": [
-          "banner728x90"
-        ],
-        "mobile": [
-          "banner320x50",
-          "banner300x250"
-        ],
-        "tablet": [
-          "banner728x90",
-          "banner300x250"
-        ]
+        "desktop": ["banner728x90", "banner468x60"],
+        "tablet": ["banner728x90", "smartlink"],
+        "mobile": ["banner320x50", "smartlink"]
       }
     },
+    
     "belowIframe": {
       "enabled": true,
       "rotation": true,
-      "templates": [
-        "banner728x90",
-        "smartlink"
-      ],
+      "delay": 2000,
+      "adUnits": ["banner728x90", "banner468x60", "smartlink", "nativeBanner"],
       "deviceSpecific": {
-        "desktop": [
-          "banner728x90"
-        ],
-        "mobile": [
-          "banner300x250"
-        ],
-        "tablet": [
-          "banner728x90"
-        ]
+        "desktop": ["banner728x90", "nativeBanner"],
+        "tablet": ["banner468x60", "smartlink"],
+        "mobile": ["banner320x50", "smartlink"]
       }
     },
+    
     "sidebar": {
       "enabled": true,
       "rotation": true,
-      "templates": [
-        "banner300x250",
-        "banner160x600",
-        "smartlink"
-      ],
+      "delay": 1000,
+      "adUnits": ["banner300x250", "banner160x600", "smartlink", "nativeBanner"],
       "deviceSpecific": {
-        "desktop": [
-          "banner300x250",
-          "banner160x600"
-        ],
-        "mobile": [
-          "banner300x250"
-        ],
-        "tablet": [
-          "banner300x250"
-        ]
+        "desktop": ["banner300x250", "banner160x600"],
+        "tablet": ["banner300x250", "smartlink"],
+        "mobile": ["banner300x250", "smartlink"]
       }
     },
+    
     "pageBottom": {
       "enabled": true,
       "rotation": true,
-      "templates": [
-        "banner728x90",
-        "banner468x60"
-      ],
+      "delay": 3000,
+      "adUnits": ["banner728x90", "banner468x60", "smartlink"],
       "deviceSpecific": {
-        "desktop": [
-          "banner728x90"
-        ],
-        "mobile": [
-          "banner320x50"
-        ],
-        "tablet": [
-          "banner728x90"
-        ]
+        "desktop": ["banner728x90"],
+        "tablet": ["banner468x60", "smartlink"],
+        "mobile": ["banner320x50"]
       }
     },
+    
     "interstitial": {
       "enabled": true,
-      "rotation": true,
+      "rotation": false,
       "delaySeconds": 30,
       "showOnExit": true,
-      "maxPerSession": 2
+      "maxPerSession": 2,
+      "adUnit": "interstitialAd"
     }
   },
+  
+  "popunderSettings": {
+    "enabled": true,
+    "delay": 5000,
+    "maxPerSession": 1,
+    "adUnit": "popunder"
+  },
+  
+  "smartlinkSettings": {
+    "enabled": true,
+    "fallback": "banner300x250",
+    "devicePreferences": {
+      "mobile": "smartlink",
+      "tablet": "smartlink",
+      "desktop": "nativeBanner"
+    }
+  },
+  
   "antiAdblock": {
     "enabled": true,
     "message": "Please consider disabling your ad blocker to support our free service",
-    "fallbackAd": "<div class='anti-adblock-message'><h3>Support Our Site</h3><p>Ads help us keep the games free for everyone. Please consider whitelisting our site.</p><button onclick='this.parentElement.style.display=\"none\";' style='background:#fff;color:#333;border:none;padding:8px 16px;border-radius:4px;margin-top:10px;cursor:pointer;'>I Understand</button></div>"
+    "detectionMethod": "script",
+    "checkInterval": 30,
+    "maxChecks": 3,
+    "html": "<div class='anti-adblock-message' style='background:rgba(0,0,0,0.9);color:#fff;padding:25px;border-radius:10px;text-align:center;margin:20px 0;border:2px solid #6c5ce7;'><div style='font-size:48px;margin-bottom:15px;'>🚫</div><h3 style='color:#a29bfe;margin-bottom:15px;font-size:22px;'>Ad Blocker Detected</h3><p style='margin-bottom:20px;line-height:1.6;font-size:16px;'>Our free games are supported by ads. Please consider disabling your ad blocker to help us continue providing free content.</p><div style='display:flex;gap:15px;justify-content:center;flex-wrap:wrap;'><button onclick=\"this.parentElement.style.display='none'; localStorage.setItem('adblock_notice_closed', 'true');\" style='background:#6c5ce7;color:#fff;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:16px;transition:background 0.3s;'>I Understand</button><button onclick=\"window.open('/whitelist-guide.html', '_blank');\" style='background:transparent;color:#a29bfe;border:2px solid #a29bfe;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;transition:all 0.3s;'>How to Whitelist</button></div></div>"
   },
-  "smartlinkSettings": {
-    "enabled": true,
-    "provider": "custom",
-    "fallback": "banner300x250"
+  
+  "deviceDetection": {
+    "mobileMaxWidth": 768,
+    "tabletMaxWidth": 1024,
+    "desktopMinWidth": 1025
   },
+  
+  "rotationSettings": {
+    "interval": 30000,
+    "smartRotation": true,
+    "performanceBased": true
+  },
+  
   "performance": {
     "lazyLoadAds": true,
     "delayLoadSeconds": 2,
-    "maxConcurrentAds": 3,
-    "cacheAds": true
+    "maxConcurrentAds": 4,
+    "cacheAds": true,
+    "preloadVisible": true
   }
 }
