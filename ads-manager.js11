@@ -47,38 +47,476 @@ class AdsManager {
     }
   }
 
-  // === 2. كشف AdBlock ===
-  detectAdBlock() {
-    if (!this.config.config?.antiAdblock?.enabled) return;
+  // === 2. كشف AdBlock محسّن ===
+detectAdBlock() {
+  if (!this.config.config?.antiAdblock?.enabled) return;
+  
+  console.log('🔍 Checking for ad blockers...');
+  
+  // طريقة 1: كشف الكلاسيكي
+  const testAd = document.createElement('div');
+  testAd.className = 'adsbox';
+  testAd.innerHTML = '&nbsp;';
+  testAd.style.cssText = 'height:1px!important;width:1px!important;position:absolute!important;left:-9999px!important;top:-9999px!important;';
+  document.body.appendChild(testAd);
+  
+  // طريقة 2: كشف ملف JavaScript للإعلانات
+  const scriptTest = document.createElement('script');
+  scriptTest.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+  scriptTest.async = true;
+  scriptTest.onerror = () => {
+    console.log('⚠️ Ad script blocked - possible ad blocker');
+    this.isAdBlockDetected = true;
+  };
+  document.head.appendChild(scriptTest);
+  
+  // طريقة 3: كشف إخفاء العناصر
+  setTimeout(() => {
+    // طريقة الكلاسيكية
+    if (testAd.offsetHeight === 0 || 
+        testAd.offsetWidth === 0 || 
+        testAd.style.display === 'none' ||
+        window.getComputedStyle(testAd).display === 'none') {
+      console.log('✅ AdBlock detected via element hiding');
+      this.isAdBlockDetected = true;
+    }
     
-    const testAd = document.createElement('div');
-    testAd.innerHTML = '&nbsp;';
-    testAd.className = 'adsbox';
-    document.body.appendChild(testAd);
+    // طريقة 4: كشف الفلاتر
+    const filterTest = document.createElement('div');
+    filterTest.id = 'ab-test-filter';
+    filterTest.style.cssText = 'width:1px;height:1px;position:absolute;';
+    filterTest.classList.add('ad', 'ads', 'advertisement');
+    document.body.appendChild(filterTest);
     
     setTimeout(() => {
-      if (testAd.offsetHeight === 0) {
+      const computedStyle = window.getComputedStyle(filterTest);
+      if (computedStyle.display === 'none' || 
+          computedStyle.visibility === 'hidden' ||
+          computedStyle.height === '0px') {
+        console.log('✅ AdBlock detected via CSS filtering');
         this.isAdBlockDetected = true;
-        if (this.config.config.antiAdblock.message) {
-          this.showAdBlockMessage();
-        }
       }
-      document.body.removeChild(testAd);
+      
+      // تنظيف
+      document.body.removeChild(filterTest);
     }, 100);
-  }
+    
+    // طريقة 5: كشف عبر Fetch (متقدم)
+    fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+      method: 'HEAD',
+      mode: 'no-cors'
+    }).catch(() => {
+      console.log('✅ AdBlock detected via fetch blocking');
+      this.isAdBlockDetected = true;
+    });
+    
+    // طريقة 6: كشف عبر محاولة تحميل iframe إعلاني
+    const iframeTest = document.createElement('iframe');
+    iframeTest.src = 'https://google.com/adsense';
+    iframeTest.style.cssText = 'display:none;';
+    iframeTest.onload = () => {
+      console.log('✅ Iframe loaded - no ad blocker');
+      document.body.removeChild(iframeTest);
+    };
+    iframeTest.onerror = () => {
+      console.log('✅ AdBlock detected via iframe blocking');
+      this.isAdBlockDetected = true;
+      document.body.removeChild(iframeTest);
+    };
+    
+    setTimeout(() => {
+      document.body.appendChild(iframeTest);
+      
+      // فحص نهائي بعد كل الاختبارات
+      setTimeout(() => {
+        if (this.isAdBlockDetected) {
+          console.log('🎯 AdBlock confirmed!');
+          this.showAdBlockMessage();
+        } else {
+          console.log('✅ No ad blocker detected');
+        }
+        
+        // تنظيف
+        document.body.removeChild(testAd);
+        document.head.removeChild(scriptTest);
+      }, 2000);
+    }, 500);
+    
+  }, 300);
+}
 
-  showAdBlockMessage() {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999999;display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `
-      <div style="background:white;padding:40px;border-radius:15px;text-align:center;max-width:500px;">
-        <h2 style="color:#e74c3c;margin-bottom:20px;">⚠️ AdBlock Detected</h2>
-        <p style="color:#333;margin-bottom:20px;">${this.config.config.antiAdblock.message}</p>
-        <button onclick="location.reload()" style="background:#3498db;color:white;border:none;padding:12px 30px;border-radius:5px;cursor:pointer;font-size:16px;">Refresh Page</button>
+// === عرض رسالة Anti-Adblock محسنة ===
+showAdBlockMessage() {
+  // تأكد من عدم عرض الرسالة أكثر من مرة
+  if (document.getElementById('anti-adblock-overlay')) return;
+  
+  const frequency = this.config.config.antiAdblock.showOnlyOnce ? 'once_per_session' : 'always';
+  if (frequency === 'once_per_session' && this.sessionData.adblockMessageShown) {
+    return;
+  }
+  
+  console.log('🚨 Showing anti-adblock message');
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'anti-adblock-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s ease;
+    font-family: Arial, sans-serif;
+  `;
+  
+  overlay.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 2px solid #ffd700;
+      position: relative;
+      animation: slideUp 0.5s ease;
+    ">
+      <button onclick="this.closest('#anti-adblock-overlay').remove(); 
+                      document.getElementById('adblock-close-permanent')?.remove();" 
+              style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: #ff4444;
+                color: white;
+                border: none;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 18px;
+                font-weight: bold;
+                z-index: 10;
+              ">
+        ✕
+      </button>
+      
+      <div style="margin-bottom: 25px;">
+        <div style="
+          font-size: 70px;
+          color: #ffd700;
+          margin-bottom: 10px;
+          animation: pulse 2s infinite;
+        ">
+          ⚠️
+        </div>
+        <h2 style="color: white; margin-bottom: 15px; font-size: 28px;">
+          AdBlocker Detected
+        </h2>
+        <p style="color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 20px; font-size: 16px;">
+          ${this.config.config.antiAdblock.message || 'Our games are 100% free thanks to ads. Please disable your ad blocker to continue playing.'}
+        </p>
+      </div>
+      
+      <div style="
+        background: rgba(255,255,255,0.1);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        text-align: left;
+      ">
+        <h3 style="color: #3CF7DC; margin-bottom: 10px; font-size: 18px;">
+          📋 How to disable AdBlock:
+        </h3>
+        <ol style="color: rgba(255,255,255,0.9); padding-left: 20px; margin: 0; font-size: 14px;">
+          <li style="margin-bottom: 8px;">Click the ad blocker icon in your browser toolbar</li>
+          <li style="margin-bottom: 8px;">Select "Pause on this site" or "Disable on this page"</li>
+          <li style="margin-bottom: 8px;">Refresh the page to continue playing</li>
+        </ol>
+      </div>
+      
+      <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <button onclick="location.reload()" style="
+          background: #3498db;
+          color: white;
+          border: none;
+          padding: 15px 35px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: bold;
+          transition: all 0.3s;
+          min-width: 180px;
+        ">
+          🔄 Refresh Page
+        </button>
+        
+        <button onclick="this.closest('#anti-adblock-overlay').remove(); 
+                        document.getElementById('adblock-close-permanent')?.remove();" 
+                style="
+          background: #2ecc71;
+          color: white;
+          border: none;
+          padding: 15px 35px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: bold;
+          transition: all 0.3s;
+          min-width: 180px;
+        ">
+          ✅ I've Disabled AdBlock
+        </button>
+      </div>
+      
+      <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
+        <p style="color: rgba(255,255,255,0.7); font-size: 13px;">
+          📢 <strong>Why disable AdBlock?</strong><br>
+          Ads keep our service free. No registration, no payments, just free games!
+        </p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+  
+  // إضافة أنيميشن CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(50px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    #anti-adblock-overlay button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    #anti-adblock-overlay button:active {
+      transform: translateY(-1px);
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // إضافة زر إغلاق دائم في أسفل الصفحة
+  if (!document.getElementById('adblock-close-permanent')) {
+    const permanentCloseBtn = document.createElement('div');
+    permanentCloseBtn.id = 'adblock-close-permanent';
+    permanentCloseBtn.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #e74c3c;
+      color: white;
+      border-radius: 50px;
+      padding: 12px 25px;
+      z-index: 2147483646;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: bounce 2s infinite;
+    `;
+    permanentCloseBtn.innerHTML = `
+      <span>⚠️ AdBlock Detected</span>
+      <button onclick="document.getElementById('anti-adblock-overlay')?.remove(); this.parentElement.remove();" 
+              style="background:white;color:#e74c3c;border:none;border-radius:50%;width:25px;height:25px;cursor:pointer;font-weight:bold;">
+        ✕
+      </button>
+    `;
+    permanentCloseBtn.onclick = () => {
+      overlay.remove();
+      permanentCloseBtn.remove();
+    };
+    document.body.appendChild(permanentCloseBtn);
+    
+    // إضافة أنيميشن bounce
+    const bounceStyle = document.createElement('style');
+    bounceStyle.textContent = `
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+    `;
+    document.head.appendChild(bounceStyle);
+  }
+  
+  // منع التمرير عند ظهور الرسالة
+  document.body.style.overflow = 'hidden';
+  
+  // إعادة تفعيل التمرير عند إغلاق الرسالة
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) {
+      document.body.style.overflow = '';
+    }
+  });
+  
+  // حفظ حالة العرض
+  this.sessionData.adblockMessageShown = true;
+  this.saveSessionData();
+  
+  // إرسال إشعار للإعلانات الأخرى
+  this.notifyAdBlockDetection();
+}
+
+// === إشعار الإعلانات الأخرى ===
+notifyAdBlockDetection() {
+  console.log('📢 Notifying ads about AdBlock detection');
+  
+  // إخفاء أو استبدال الإعلانات
+  const adElements = document.querySelectorAll('.ad-banner, .adsbox, [class*="ad"], [id*="ad"]');
+  adElements.forEach(ad => {
+    if (ad.id !== 'anti-adblock-overlay' && !ad.closest('#anti-adblock-overlay')) {
+      ad.style.opacity = '0.5';
+      ad.style.filter = 'grayscale(100%)';
+      ad.innerHTML += `
+        <div style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(231, 76, 60, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1;
+          border-radius: 8px;
+        ">
+          <span style="
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+          ">
+            AdBlock Detected
+          </span>
+        </div>
+      `;
+    }
+  });
+  
+  // إرسال حدث مخصص
+  const adBlockEvent = new CustomEvent('adblock-detected', {
+    detail: { timestamp: Date.now(), manager: this }
+  });
+  window.dispatchEvent(adBlockEvent);
+}
+
+// === تحديث init() ===
+async init() {
+  try {
+    // تجاهل أخطاء Unity الداخلية
+    this.filterUnityErrors();
+    
+    // فحص وإصلاح الحاويات أولاً
+    this.fixAdContainers();
+    
+    const response = await fetch('ads.json');
+    if (!response.ok) throw new Error('Failed to load ads.json');
+    
+    this.config = await response.json();
+    console.log('✅ تم تحميل إعدادات الإعلانات');
+    
+    // كشف AdBlock أولاً (قبل أي إعلانات)
+    if (this.config.config?.antiAdblock?.enabled) {
+      this.detectAdBlock();
+      
+      // انتظار نتائج كشف AdBlock
+      await this.delay(2500);
+      
+      // إذا كان AdBlock مفعلاً، تخطي بعض الإعلانات
+      if (this.isAdBlockDetected) {
+        console.log('🚨 AdBlock detected - modifying ad strategy');
+        this.modifyStrategyForAdBlock();
+      }
+    }
+    
+    // تأخير ذكي قبل بدء الإعلانات
+    if (this.config.config?.smartDelay?.enabled && !this.isAdBlockDetected) {
+      await this.delay(this.config.config.smartDelay.delayBeforeFirstAd);
+    }
+    
+    // تشغيل جميع الإعلانات بالتسلسل
+    await this.loadAdsSequentially();
+    
+    console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
+    
+  } catch (error) {
+    console.error('❌ خطأ في تحميل الإعلانات:', error);
+    this.showFallbackAds();
+  }
+}
+
+// === تعديل الاستراتيجية عند وجود AdBlock ===
+modifyStrategyForAdBlock() {
+  console.log('🔄 Modifying ad strategy for AdBlock users');
+  
+  // تعديل الإعدادات للتعامل مع AdBlock
+  if (this.config.popunder) {
+    this.config.popunder.enabled = false; // تعطيل popunder
+  }
+  
+  if (this.config.smartlink) {
+    this.config.smartlink.enabled = false; // تعطيل smartlink
+  }
+  
+  // تقليل عدد الإعلانات
+  if (this.config.banners) {
+    if (this.config.banners.aboveIframe) {
+      this.config.banners.aboveIframe.rotation = false;
+    }
+    if (this.config.banners.belowIframe) {
+      this.config.banners.belowIframe.rotation = false;
+    }
+  }
+  
+  // إضافة رسالة في الإعلانات
+  const adMessage = 'Please disable AdBlock to support free games';
+  
+  // تحديث الـ fallback HTML
+  if (this.config.banners?.aboveIframe) {
+    this.config.banners.aboveIframe.fallbackHtml = `
+      <div class="ad-banner" style="background:linear-gradient(135deg,#e74c3c,#c0392b);padding:20px;border-radius:10px;text-align:center;">
+        <div class="ad-label">⚠️ AdBlock</div>
+        <h4 style="color:white;margin:10px 0;">${adMessage}</h4>
+        <p style="color:rgba(255,255,255,0.8);font-size:14px;">
+          Our games are free thanks to ads
+        </p>
+        <button onclick="window.adsManager?.showAdBlockMessage()" 
+                style="background:white;color:#e74c3c;border:none;padding:8px 20px;border-radius:5px;cursor:pointer;margin-top:10px;font-weight:bold;">
+          Learn More
+        </button>
       </div>
     `;
-    document.body.appendChild(overlay);
   }
+}
 
   // === 3. تحميل Popunder ===
   loadPopunder() {
