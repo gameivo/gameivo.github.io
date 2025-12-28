@@ -97,7 +97,7 @@
         {
           "id": "banner-468x60-bottom",
           "script": "https://www.highperformanceformat.com/b07536416d988628a30c9fd13c94a851/invoke.js",
-          "config": {
+          config: {
             "key": "b07536416d988628a30c9fd13c94a851",
             "format": "iframe",
             "height": 60,
