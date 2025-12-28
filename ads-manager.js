@@ -1,6 +1,9 @@
 /**
- * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسنة
- * نظام Anti-AdBlock فعال مع جميع الإعلانات الـ 10
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
+ * ✅ إصلاح البانرات السوداء
+ * ✅ إصلاح Popunder للعمل مرة واحدة فقط
+ * ✅ إضافة جميع الإعلانات الجديدة
+ * ✅ الحفاظ على نظام Anti-AdBlock
  */
 
 class AdsManager {
@@ -10,6 +13,8 @@ class AdsManager {
     this.sessionData = this.getSessionData();
     this.isAdBlockDetected = false;
     this.adElements = new Map();
+    this.loadedScripts = new Set(); // تتبع السكريبتات المحملة
+    this.popunderCount = 0; // عداد Popunder
   }
 
   // === 1. تحميل الإعدادات ===
@@ -28,7 +33,7 @@ class AdsManager {
       const antiAdblockEnabled = this.config.antiAdblock?.enabled ?? true;
       
       if (antiAdblockEnabled) {
-        console.log('🔍 Anti-AdBlock مفعّل - بدء الفحص...');
+        console.log('🔍 Anti-AdBlock مُفعّل - بدء الفحص...');
         const adBlockDetected = await this.detectAdBlockEffectively();
         
         if (adBlockDetected) {
@@ -446,12 +451,16 @@ class AdsManager {
     await this.delay(1500);
     this.loadSocialBar();
     
-    // 5. إعلانات إضافية
+    // 5. إعلان وسط الصفحة
     await this.delay(2000);
-    this.loadAdditionalAds();
+    this.loadMiddleAd();
     
-    // 6. إعلانات تفاعلية
+    // 6. إعلان إضافي في Sidebar
     await this.delay(2500);
+    this.loadExtraSidebarAd();
+    
+    // 7. إعلانات تفاعلية (Popunder & Smartlink)
+    await this.delay(3000);
     this.loadPopunder();
     this.loadSmartlink();
   }
@@ -460,7 +469,7 @@ class AdsManager {
   async loadBanners() {
     console.log('🖼️ تحميل البانرات...');
     
-    // فوق iframe - استخدام جميع الإعلانات بالتناوب
+    // فوق iframe
     if (this.config.banners?.aboveIframe?.enabled) {
       this.loadBannerAd('ad-above-iframe', this.config.banners.aboveIframe);
     }
@@ -479,21 +488,14 @@ class AdsManager {
         this.loadBannerAd('ad-page-bottom', this.config.banners.pageBottom);
       }, 1500);
     }
-    
-    // إضافة إعلان في وسط المحتوى
-    setTimeout(() => {
-      this.loadMiddleAd();
-    }, 2000);
   }
 
   loadBannerAd(containerId, bannerConfig) {
     const container = this.ensureContainerExists(containerId);
     if (!container) {
-      console.warn(`❌ Container ${containerId} not found, creating...`);
+      console.warn(`❌ Container ${containerId} not found`);
       return;
     }
-    
-    container.innerHTML = '';
     
     const ads = bannerConfig.ads;
     if (!ads || ads.length === 0) return;
@@ -524,118 +526,63 @@ class AdsManager {
     
     console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
     
+    // إنشاء معرف فريد للإعلان
+    const uniqueId = `${ad.id}-${Date.now()}`;
+    const scriptKey = `${ad.config?.key}-${uniqueId}`;
+    
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner';
-    adDiv.id = `ad-${ad.id}-${containerId}`;
+    adDiv.id = `ad-wrapper-${uniqueId}`;
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="banner-${ad.id}" style="text-align:center;min-height:${ad.config?.height || 90}px;"></div>
+      <div id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
     `;
     
     container.innerHTML = '';
     container.appendChild(adDiv);
     
     setTimeout(() => {
-      if (ad.config) {
-        window.atOptions = ad.config;
-      }
+      // تعيين الخيارات بشكل فريد
+      const optionsKey = `atOptions_${scriptKey.replace(/-/g, '_')}`;
+      window[optionsKey] = {
+        ...ad.config,
+        params: {}
+      };
       
       const script = document.createElement('script');
       script.src = ad.script;
       script.async = true;
       script.setAttribute('data-cfasync', 'false');
-      script.className = `atScript${ad.config?.key}`;
+      script.id = `script-${uniqueId}`;
       
-      const targetElement = document.getElementById(`banner-${ad.id}`);
+      // استخدام atOptions المحدد
+      script.onload = () => {
+        console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+      };
+      
+      script.onerror = () => {
+        console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
+      };
+      
+      const targetElement = document.getElementById(`banner-${uniqueId}`);
       if (targetElement) {
         targetElement.appendChild(script);
-        console.log(`✅ تم تحميل إعلان: ${ad.id}`);
       }
     }, 300);
   }
 
   // === 8. إضافة إعلان في وسط المحتوى ===
   loadMiddleAd() {
+    if (!this.config.banners?.pageMiddle?.enabled) return;
+    
     const container = this.ensureContainerExists('ad-page-middle');
-    
-    const adConfig = {
-      rotation: true,
-      rotationInterval: 35000,
-      ads: [
-        {
-          id: "banner-300x250-middle",
-          script: "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
-          config: {
-            key: "c84b7f14ef2b488fb99e7411123accf1",
-            format: "iframe",
-            height: 250,
-            width: 300
-          }
-        },
-        {
-          id: "banner-468x60-middle",
-          script: "https://www.highperformanceformat.com/b07536416d988628a30c9fd13c94a851/invoke.js",
-          config: {
-            key: "b07536416d988628a30c9fd13c94a851",
-            format: "iframe",
-            height: 60,
-            width: 468
-          }
-        }
-      ]
-    };
-    
-    this.loadBannerAd('ad-page-middle', adConfig);
+    this.loadBannerAd('ad-page-middle', this.config.banners.pageMiddle);
   }
 
-  // === 9. تحميل إعلانات إضافية ===
-  loadAdditionalAds() {
-    console.log('➕ تحميل إعلانات إضافية...');
-    
-    // 1. إعلان في نهاية الصفحة
-    const footerAd = document.createElement('div');
-    footerAd.id = 'ad-footer';
-    footerAd.style.cssText = `
-      min-height: 90px;
-      margin: 30px auto;
-      max-width: 728px;
-      text-align: center;
-      background: rgba(0,0,0,0.7);
-      border-radius: 8px;
-      padding: 15px;
-    `;
-    
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) {
-      mainContent.appendChild(footerAd);
-      
-      const footerConfig = {
-        rotation: false,
-        ads: [
-          {
-            id: "banner-728x90-footer",
-            script: "https://www.highperformanceformat.com/a29bc677676d4759eafbbf48bff57ae3/invoke.js",
-            config: {
-              key: "a29bc677676d4759eafbbf48bff57ae3",
-              format: "iframe",
-              height: 90,
-              width: 728
-            }
-          }
-        ]
-      };
-      
-      this.loadBannerAd('ad-footer', footerConfig);
-    }
-    
-    // 2. إعلان إضافي في الجانب
-    setTimeout(() => {
-      this.loadExtraSidebarAd();
-    }, 3000);
-  }
-
-  // === 10. تحميل إعلان إضافي في الجانب ===
+  // === 9. تحميل إعلان إضافي في الجانب ===
   loadExtraSidebarAd() {
+    if (!this.config.sidebarAdExtra?.enabled) return;
+    
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
     
@@ -661,38 +608,10 @@ class AdsManager {
       sidebar.appendChild(extraContainer);
     }
     
-    // تحميل الإعلان الإضافي
-    const extraAdConfig = {
-      rotation: true,
-      rotationInterval: 40000,
-      ads: [
-        {
-          id: "sidebar-160x300-extra",
-          script: "https://www.highperformanceformat.com/77500fee8ec2644cacc4361ea5fac945/invoke.js",
-          config: {
-            key: "77500fee8ec2644cacc4361ea5fac945",
-            format: "iframe",
-            height: 300,
-            width: 160
-          }
-        },
-        {
-          id: "sidebar-300x250-extra",
-          script: "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
-          config: {
-            key: "c84b7f14ef2b488fb99e7411123accf1",
-            format: "iframe",
-            height: 250,
-            width: 300
-          }
-        }
-      ]
-    };
-    
-    this.loadBannerAd('ad-sidebar-extra', extraAdConfig);
+    this.loadBannerAd('ad-sidebar-extra', this.config.sidebarAdExtra);
   }
 
-  // === 11. تحميل Native Banner ===
+  // === 10. تحميل Native Banner ===
   loadNativeBanner() {
     if (!this.config.nativeBanner?.enabled) return;
     
@@ -712,13 +631,14 @@ class AdsManager {
         const script = document.createElement('script');
         script.src = this.config.nativeBanner.script;
         script.async = true;
+        script.setAttribute('data-cfasync', 'false');
         container.appendChild(script);
         console.log('✅ Native Banner loaded');
       }, 1000);
     }
   }
 
-  // === 12. تحميل إعلانات Sidebar ===
+  // === 11. تحميل إعلانات Sidebar ===
   loadSidebarAds() {
     if (!this.config.sidebarAd?.enabled) return;
     
@@ -737,7 +657,7 @@ class AdsManager {
     // التدوير
     if (this.config.sidebarAd.rotation && ads.length > 1) {
       let currentIndex = 0;
-      const interval = this.config.sidebarAd.rotationInterval || 40000;
+      const interval = this.config.sidebarAd.rotationInterval || 45000;
       
       this.rotationTimers['sidebar'] = setInterval(() => {
         currentIndex = (currentIndex + 1) % ads.length;
@@ -748,25 +668,32 @@ class AdsManager {
   }
 
   loadSidebarAd(container, ad) {
+    const uniqueId = `${ad.id}-${Date.now()}`;
+    
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner ad-sidebar';
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="sidebar-${ad.id}" style="text-align:center;min-height:${ad.config?.height || 300}px;"></div>
+      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 300}px;background:transparent;"></div>
     `;
     
     container.innerHTML = '';
     container.appendChild(adDiv);
     
     setTimeout(() => {
-      window.atOptions = ad.config;
+      const optionsKey = `atOptions_sidebar_${uniqueId.replace(/-/g, '_')}`;
+      window[optionsKey] = {
+        ...ad.config,
+        params: {}
+      };
+      
       const script = document.createElement('script');
       script.src = ad.script;
       script.async = true;
       script.setAttribute('data-cfasync', 'false');
-      script.className = `atScript${ad.config?.key}`;
+      script.id = `sidebar-script-${uniqueId}`;
       
-      const targetElement = document.getElementById(`sidebar-${ad.id}`);
+      const targetElement = document.getElementById(`sidebar-${uniqueId}`);
       if (targetElement) {
         targetElement.appendChild(script);
         console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
@@ -774,12 +701,18 @@ class AdsManager {
     }, 300);
   }
 
-  // === 13. تحميل Social Bar ===
+  // === 12. تحميل Social Bar ===
   loadSocialBar() {
-    if (!this.config.popunder?.scripts || this.config.popunder.scripts.length === 0) return;
+    if (!this.config.socialBar?.enabled) return;
     
-    // Social Bar هو السكريبت الأول في المصفوفة
-    const socialBarScript = this.config.popunder.scripts[0];
+    const socialBarScript = this.config.socialBar.script;
+    if (!socialBarScript) return;
+    
+    // التحقق من عدم تحميل السكريبت مسبقاً
+    if (this.loadedScripts.has(socialBarScript)) {
+      console.log('⚠️ Social Bar already loaded');
+      return;
+    }
     
     setTimeout(() => {
       const script = document.createElement('script');
@@ -789,41 +722,65 @@ class AdsManager {
       script.id = 'social-bar-script';
       
       document.body.appendChild(script);
+      this.loadedScripts.add(socialBarScript);
       
       console.log('✅ Social Bar loaded');
-    }, 5000);
+    }, this.config.socialBar.delay || 5000);
   }
 
-  // === 14. تحميل Popunder ===
+  // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
     if (!this.config.popunder?.enabled) return;
     
     const frequency = this.config.popunder.frequency;
-    if (frequency === 'once_per_session' && this.sessionData.popunderShown) {
-      return;
+    const maxPerSession = this.config.popunder.maxPerSession || 1;
+    
+    // التحقق من عدد المرات المسموح بها
+    if (frequency === 'once_per_session') {
+      const currentCount = this.sessionData.popunderCount || 0;
+      
+      if (currentCount >= maxPerSession) {
+        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
+        return;
+      }
     }
     
     setTimeout(() => {
-      this.config.popunder.scripts.forEach(scriptUrl => {
+      this.config.popunder.scripts.forEach((scriptUrl, index) => {
+        // التحقق من عدم تحميل السكريبت مسبقاً
+        if (this.loadedScripts.has(scriptUrl)) {
+          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
+          return;
+        }
+        
         const script = document.createElement('script');
         script.src = scriptUrl;
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
+        script.id = `popunder-script-${index}`;
+        
         document.body.appendChild(script);
-        console.log('✅ Popunder script loaded:', scriptUrl);
+        this.loadedScripts.add(scriptUrl);
+        
+        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
       });
       
+      // تحديث العداد
+      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
       this.sessionData.popunderShown = true;
       this.saveSessionData();
+      
+      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
     }, this.config.popunder.delay || 8000);
   }
 
-  // === 15. تحميل Smartlink ===
+  // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
     if (!this.config.smartlink?.enabled) return;
     
     const frequency = this.config.smartlink.frequency;
     if (frequency === 'once_per_session' && this.sessionData.smartlinkOpened) {
+      console.log('⚠️ Smartlink already opened in this session');
       return;
     }
     
@@ -839,7 +796,7 @@ class AdsManager {
         } else {
           window.location.href = this.config.smartlink.url;
         }
-      }, this.config.smartlink.delay || 2000);
+      }, this.config.smartlink.delay || 3000);
     };
     
     const checkGameLoaded = (attempt = 1) => {
@@ -854,10 +811,10 @@ class AdsManager {
       }
     };
     
-    setTimeout(() => checkGameLoaded(), 3000);
+    setTimeout(() => checkGameLoaded(), 2000);
   }
 
-  // === 16. فحص وإصلاح الحاويات ===
+  // === 15. فحص وإصلاح الحاويات ===
   fixAdContainers() {
     console.log('🔧 فحص وإصلاح حاويات الإعلانات...');
     
@@ -866,8 +823,7 @@ class AdsManager {
       'ad-below-iframe', 
       'ad-page-bottom',
       'ad-sidebar',
-      'ad-page-middle',
-      'ad-sidebar-extra'
+      'ad-page-middle'
     ];
     
     containers.forEach(containerId => {
@@ -880,6 +836,7 @@ class AdsManager {
           min-height: 50px;
           margin: 20px 0;
           position: relative;
+          background: transparent;
         `;
         
         // تحديد مكان الإدراج
@@ -914,7 +871,6 @@ class AdsManager {
             break;
             
           case 'ad-sidebar':
-          case 'ad-sidebar-extra':
             const sidebar = document.querySelector('.sidebar');
             if (sidebar) {
               sidebar.appendChild(container);
@@ -934,7 +890,7 @@ class AdsManager {
     });
   }
 
-  // === 17. دالة مساعدة للتأكد من وجود الحاوية ===
+  // === 16. دالة مساعدة للتأكد من وجود الحاوية ===
   ensureContainerExists(containerId) {
     let container = document.getElementById(containerId);
     
@@ -946,6 +902,7 @@ class AdsManager {
         min-height: 50px;
         margin: 20px 0;
         position: relative;
+        background: transparent;
       `;
       
       // محاولة إيجاد مكان مناسب
@@ -972,11 +929,10 @@ class AdsManager {
     return container;
   }
 
-  // === 18. عرض إعلانات فولباك ===
+  // === 17. عرض إعلانات فولباك ===
   showFallbackAds() {
     console.log('🔄 عرض إعلانات احتياطية...');
     
-    // إعلانات احتياطية بسيطة
     const fallbackAds = [
       {
         id: 'fallback-1',
@@ -990,7 +946,6 @@ class AdsManager {
       }
     ];
     
-    // وضع إعلانات احتياطية في الحاويات الرئيسية
     ['ad-above-iframe', 'ad-below-iframe', 'ad-sidebar'].forEach(containerId => {
       const container = document.getElementById(containerId);
       if (container && fallbackAds[0]) {
@@ -999,21 +954,39 @@ class AdsManager {
     });
   }
 
-  // === 19. إدارة الجلسة ===
+  // === 18. إدارة الجلسة ===
   getSessionData() {
-    const data = sessionStorage.getItem('adsSessionData');
-    return data ? JSON.parse(data) : {
-      popunderShown: false,
-      smartlinkOpened: false,
-      adsLoaded: 0
-    };
+    try {
+      const data = sessionStorage.getItem('adsSessionData');
+      return data ? JSON.parse(data) : {
+        popunderShown: false,
+        popunderCount: 0,
+        smartlinkOpened: false,
+        adsLoaded: 0,
+        sessionId: Date.now()
+      };
+    } catch (error) {
+      console.error('خطأ في قراءة بيانات الجلسة:', error);
+      return {
+        popunderShown: false,
+        popunderCount: 0,
+        smartlinkOpened: false,
+        adsLoaded: 0,
+        sessionId: Date.now()
+      };
+    }
   }
 
   saveSessionData() {
-    sessionStorage.setItem('adsSessionData', JSON.stringify(this.sessionData));
+    try {
+      sessionStorage.setItem('adsSessionData', JSON.stringify(this.sessionData));
+      console.log('💾 تم حفظ بيانات الجلسة:', this.sessionData);
+    } catch (error) {
+      console.error('خطأ في حفظ بيانات الجلسة:', error);
+    }
   }
 
-  // === 20. تصفية أخطاء Unity ===
+  // === 19. تصفية أخطاء Unity ===
   filterUnityErrors() {
     const originalError = console.error;
     console.error = function(...args) {
@@ -1027,15 +1000,16 @@ class AdsManager {
     };
   }
 
-  // === 21. دالة مساعدة للتأخير ===
+  // === 20. دالة مساعدة للتأخير ===
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // === 22. تنظيف الموارد ===
+  // === 21. تنظيف الموارد ===
   destroy() {
     Object.values(this.rotationTimers).forEach(timer => clearInterval(timer));
     this.rotationTimers = {};
+    this.loadedScripts.clear();
     console.log('🧹 تم تنظيف موارد الإعلانات');
   }
 }
@@ -1060,6 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
       backdrop-filter: blur(5px);
       border: 1px solid rgba(255,255,255,0.1);
       transition: all 0.3s ease;
+      min-height: 50px;
     }
     
     .ad-banner:hover {
@@ -1079,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
       font-weight: bold;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      z-index: 10;
     }
     
     .ad-sidebar {
@@ -1111,12 +1087,6 @@ document.addEventListener('DOMContentLoaded', () => {
       text-align: center;
     }
     
-    #ad-footer {
-      margin: 30px auto;
-      max-width: 728px;
-      text-align: center;
-    }
-    
     #ad-sidebar-extra {
       margin-top: 20px;
     }
@@ -1143,10 +1113,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       .ad-sidebar {
         position: static;
-      }
-      
-      #ad-footer {
-        margin: 20px auto;
       }
     }
     
