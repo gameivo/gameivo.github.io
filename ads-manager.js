@@ -24,16 +24,24 @@ class AdsManager {
       this.config = await response.json();
       console.log('✅ تم تحميل إعدادات الإعلانات');
       
-      // 1. أولاً: محاولة تحميل إعلان تجريبي لاكتشاف AdBlock
-      const adBlockDetected = await this.detectAdBlockEffectively();
+      // ✅ التحقق من تفعيل Anti-AdBlock من الإعدادات
+      const antiAdblockEnabled = this.config.antiAdblock?.enabled ?? true;
       
-      if (adBlockDetected) {
-        console.log('🚫 AdBlock detected - Blocking page access');
-        this.blockPageAccess();
-        return; // توقف عن تحميل باقي الإعلانات
+      if (antiAdblockEnabled) {
+        console.log('🔍 Anti-AdBlock مفعّل - بدء الفحص...');
+        // 1. أولاً: محاولة تحميل إعلان تجريبي لاكتشاف AdBlock
+        const adBlockDetected = await this.detectAdBlockEffectively();
+        
+        if (adBlockDetected) {
+          console.log('🚫 AdBlock detected - Blocking page access');
+          this.blockPageAccess();
+          return; // توقف عن تحميل باقي الإعلانات
+        }
+      } else {
+        console.log('⚠️ Anti-AdBlock معطّل - تخطي الفحص');
       }
       
-      // 2. إذا لم يكن هناك AdBlock، حمّل الإعلانات
+      // 2. إذا لم يكن هناك AdBlock أو كان Anti-AdBlock معطلاً، حمّل الإعلانات
       await this.loadAdsSequentially();
       console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
       
@@ -42,7 +50,6 @@ class AdsManager {
       this.showFallbackAds();
     }
   }
-
   // === 2. كشف AdBlock بشكل فعال ===
   async detectAdBlockEffectively() {
     console.log('🔍 بدء كشف AdBlock...');
