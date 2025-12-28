@@ -11,6 +11,7 @@
     "frequency": "once_per_session",
     "delay": 8000,
     "scripts": [
+      "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js",
       "https://pl28343660.effectivegatecpm.com/d3/01/ff/d301ff1e4475b527cf2dccff540822e5.js"
     ]
   },
@@ -19,11 +20,6 @@
     "enabled": true,
     "script": "https://pl28343658.effectivegatecpm.com/576ef3ebcc3bae2383642673940c2ab2/invoke.js",
     "html": "<div id='container-576ef3ebcc3bae2383642673940c2ab2'></div>"
-  },
-  
-  "socialBar": {
-    "enabled": true,
-    "script": "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js"
   },
   
   "banners": {
@@ -39,8 +35,7 @@
             "key": "a29bc677676d4759eafbbf48bff57ae3",
             "format": "iframe",
             "height": 90,
-            "width": 728,
-            "params": {}
+            "width": 728
           }
         },
         {
@@ -50,8 +45,7 @@
             "key": "b07536416d988628a30c9fd13c94a851",
             "format": "iframe",
             "height": 60,
-            "width": 468,
-            "params": {}
+            "width": 468
           }
         }
       ]
@@ -69,8 +63,7 @@
             "key": "af340b221e82600db1aeec2c3bd2cd9c",
             "format": "iframe",
             "height": 50,
-            "width": 320,
-            "params": {}
+            "width": 320
           }
         },
         {
@@ -80,8 +73,7 @@
             "key": "c84b7f14ef2b488fb99e7411123accf1",
             "format": "iframe",
             "height": 250,
-            "width": 300,
-            "params": {}
+            "width": 300
           }
         }
       ]
@@ -99,8 +91,7 @@
             "key": "a29bc677676d4759eafbbf48bff57ae3",
             "format": "iframe",
             "height": 90,
-            "width": 728,
-            "params": {}
+            "width": 728
           }
         },
         {
@@ -110,8 +101,7 @@
             "key": "b07536416d988628a30c9fd13c94a851",
             "format": "iframe",
             "height": 60,
-            "width": 468,
-            "params": {}
+            "width": 468
           }
         }
       ]
@@ -130,8 +120,7 @@
           "key": "77500fee8ec2644cacc4361ea5fac945",
           "format": "iframe",
           "height": 300,
-          "width": 160,
-          "params": {}
+          "width": 160
         }
       },
       {
@@ -141,8 +130,7 @@
           "key": "c4bc6a456a9544ff74b98a472c52ea91",
           "format": "iframe",
           "height": 600,
-          "width": 160,
-          "params": {}
+          "width": 160
         }
       },
       {
@@ -152,8 +140,7 @@
           "key": "c84b7f14ef2b488fb99e7411123accf1",
           "format": "iframe",
           "height": 250,
-          "width": 300,
-          "params": {}
+          "width": 300
         }
       }
     ]
