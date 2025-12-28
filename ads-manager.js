@@ -664,20 +664,23 @@ class AdsManager {
 
   // === 11. تحميل الإعلانات بالتسلسل ===
   async loadAdsSequentially() {
-    // 1. إعلانات سريعة
-    this.loadNativeBanner();
-    this.loadSidebarAds();
-    
-    // 2. بانرات اللعبة
-    await this.delay(1000);
-    this.loadBanners();
-    
-    // 3. إعلانات تفاعلية
-    await this.delay(2000);
-    this.loadPopunder();
-    this.loadSmartlink();
-  }
-
+  // 1. إعلانات سريعة
+  this.loadNativeBanner();
+  this.loadSidebarAds();
+  
+  // 2. بانرات اللعبة
+  await this.delay(1000);
+  this.loadBanners();
+  
+  // 3. Social Bar
+  await this.delay(1500);
+  this.loadSocialBar();
+  
+  // 4. إعلانات تفاعلية
+  await this.delay(2000);
+  this.loadPopunder();
+  this.loadSmartlink();
+}
   // === 12. فحص وإصلاح الحاويات ===
   fixAdContainers() {
     ['ad-above-iframe', 'ad-below-iframe', 'ad-page-bottom', 'ad-sidebar'].forEach(containerId => {
@@ -736,6 +739,27 @@ class AdsManager {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  // === 18. تحميل Social Bar ===
+loadSocialBar() {
+  if (!this.config.popunder?.scripts || this.config.popunder.scripts.length === 0) return;
+  
+  // Social Bar هي السكريبت الأول في المصفوفة
+  const socialBarScript = this.config.popunder.scripts[0];
+  
+  setTimeout(() => {
+    const script = document.createElement('script');
+    script.src = socialBarScript;
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    script.id = 'social-bar-script';
+    
+    // وضع السكريبت في نهاية body
+    document.body.appendChild(script);
+    
+    console.log('✅ Social Bar loaded');
+  }, 5000); // تحميل بعد 5 ثواني
+}
+  
   // === 17. تنظيف الموارد ===
   destroy() {
     Object.values(this.rotationTimers).forEach(timer => clearInterval(timer));
