@@ -1,13 +1,13 @@
 {
   "antiAdblock": {
-    "enabled": false,
-    "showWarning": false,
+    "enabled": true,
+    "showWarning": true,
     "warningPosition": "bottom-right",
     "warningDuration": 10000
   },
   
   "popunder": {
-    "enabled": false,
+    "enabled": true,
     "frequency": "once_per_session",
     "delay": 8000,
     "scripts": [
@@ -16,15 +16,15 @@
   },
   
   "nativeBanner": {
-    "enabled": false,
+    "enabled": true,
     "script": "https://pl28343658.effectivegatecpm.com/576ef3ebcc3bae2383642673940c2ab2/invoke.js",
     "html": "<div id='container-576ef3ebcc3bae2383642673940c2ab2'></div>"
   },
   
   "banners": {
     "aboveIframe": {
-      "enabled": false,
-      "rotation": false,
+      "enabled": true,
+      "rotation": true,
       "rotationInterval": 30000,
       "ads": [
         {
@@ -41,8 +41,8 @@
     },
     
     "belowIframe": {
-      "enabled": false,
-      "rotation": false,
+      "enabled": true,
+      "rotation": true,
       "rotationInterval": 25000,
       "ads": [
         {
@@ -59,8 +59,8 @@
     },
     
     "pageBottom": {
-      "enabled": false,
-      "rotation": false,
+      "enabled": true,
+      "rotation": true,
       "ads": [
         {
           "id": "banner-728x90-bottom",
@@ -77,8 +77,8 @@
   },
   
   "sidebarAd": {
-    "enabled": false,
-    "rotation": false,
+    "enabled": true,
+    "rotation": true,
     "rotationInterval": 40000,
     "ads": [
       {
@@ -95,10 +95,10 @@
   },
   
   "smartlink": {
-    "enabled": false,
+    "enabled": true,
     "url": "https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4",
     "frequency": "once_per_session",
-    "openInNewTab": false,
+    "openInNewTab": true,
     "delay": 2000
   }
 }
