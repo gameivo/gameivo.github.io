@@ -44,40 +44,305 @@ class AdsManager {
     }
   }
 
-  // === 2. كشف AdBlock ===
-  detectAdBlock() {
+  // === 2. كشف AdBlock - النسخة المحسنة ===
+detectAdBlock() {
     if (!this.config.config?.antiAdblock?.enabled) return;
     
-    const testAd = document.createElement('div');
-    testAd.innerHTML = '&nbsp;';
-    testAd.className = 'adsbox';
-    testAd.style.cssText = 'height:1px;width:1px;position:absolute;left:-9999px;';
-    document.body.appendChild(testAd);
-    
-    setTimeout(() => {
-      if (testAd.offsetHeight === 0 || testAd.offsetWidth === 0) {
-        this.isAdBlockDetected = true;
-        if (this.config.config.antiAdblock.message) {
-          this.showAdBlockMessage();
+    // طريقة أكثر موثوقية للكشف
+    const detectionMethods = [
+        // طريقة 1: الكشف عن عناصر الإعلانات المحجوبة
+        () => {
+            const testAd = document.createElement('div');
+            testAd.innerHTML = '&nbsp;';
+            testAd.className = 'adsbox';
+            testAd.style.cssText = 'height:1px;width:1px;position:absolute;left:-9999px;';
+            document.body.appendChild(testAd);
+            
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const isBlocked = testAd.offsetHeight === 0 || testAd.offsetWidth === 0;
+                    document.body.removeChild(testAd);
+                    resolve(isBlocked);
+                }, 100);
+            });
+        },
+        
+        // طريقة 2: الكشف عن ملفات الإعلانات المحجوبة
+        () => {
+            return new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+                script.onload = () => resolve(false);
+                script.onerror = () => resolve(true);
+                script.async = true;
+                document.head.appendChild(script);
+                
+                setTimeout(() => {
+                    if (script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    resolve(false); // افتراضي: لا يوجد حجب
+                }, 2000);
+            });
+        },
+        
+        // طريقة 3: الكشف عن فلاتر CSS المشهورة
+        () => {
+            const blockedSelectors = [
+                '.ad-banner',
+                '.advertisement',
+                '.adsbygoogle',
+                '[id*="ad-"]',
+                '[class*="ad-"]'
+            ];
+            
+            for (let selector of blockedSelectors) {
+                try {
+                    const elements = document.querySelectorAll(selector);
+                    for (let element of elements) {
+                        if (window.getComputedStyle(element).display === 'none' || 
+                            window.getComputedStyle(element).visibility === 'hidden' ||
+                            element.offsetHeight === 0) {
+                            return true;
+                        }
+                    }
+                } catch (e) {
+                    // تجاهل الأخطاء
+                }
+            }
+            return false;
         }
-      }
-      document.body.removeChild(testAd);
-    }, 100);
-  }
+    ];
+    
+    // تشغيل جميع طرق الكشف
+    Promise.all(detectionMethods.map(method => method())).then(results => {
+        const isBlocked = results.some(result => result === true);
+        
+        if (isBlocked) {
+            this.isAdBlockDetected = true;
+            this.showAdBlockMessage();
+            this.blockPageInteraction();
+        }
+    });
+}
 
-  showAdBlockMessage() {
+// === إظهار رسالة أقوى مع منع التفاعل ===
+showAdBlockMessage() {
+    if (!this.config.config.antiAdblock.message) return;
+    
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999999;display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `
-      <div style="background:white;padding:40px;border-radius:15px;text-align:center;max-width:500px;">
-        <h2 style="color:#e74c3c;margin-bottom:20px;">⚠️ AdBlock Detected</h2>
-        <p style="color:#333;margin-bottom:20px;">${this.config.config.antiAdblock.message}</p>
-        <button onclick="location.reload()" style="background:#3498db;color:white;border:none;padding:12px 30px;border-radius:5px;cursor:pointer;font-size:16px;">Refresh Page</button>
-      </div>
+    overlay.id = 'adblock-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
     `;
+    
+    overlay.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        ">
+            <div style="font-size: 80px; margin-bottom: 20px;">🚫</div>
+            <h2 style="color: white; margin-bottom: 20px; font-size: 28px;">
+                Ad Blocker Detected!
+            </h2>
+            <p style="color: rgba(255,255,255,0.9); margin-bottom: 30px; font-size: 18px; line-height: 1.6;">
+                ${this.config.config.antiAdblock.message}
+            </p>
+            <div style="margin-bottom: 30px;">
+                <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 15px;">
+                    To continue playing, please:
+                </p>
+                <div style="text-align: left; color: white; font-size: 14px;">
+                    <p>1. Disable your ad blocker for this site</p>
+                    <p>2. Refresh the page</p>
+                    <p>3. Enjoy free games!</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="location.reload()" style="
+                    background: #2ecc71;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    transition: all 0.3s;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    🔄 Refresh Page
+                </button>
+                <button onclick="window.open('https://rowhub.github.io', '_self')" style="
+                    background: #3498db;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    transition: all 0.3s;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    🏠 Go to Homepage
+                </button>
+            </div>
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <p style="color: rgba(255,255,255,0.7); font-size: 12px;">
+                    💡 <strong>Why disable ad blocker?</strong><br>
+                    Ads help us keep all games 100% free for everyone
+                </p>
+            </div>
+        </div>
+    `;
+    
+    // إضافة أنيميشن النبض
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+    
     document.body.appendChild(overlay);
-  }
+    
+    // منع إغلاق الرسالة إذا كان showOnlyOnce = false
+    if (!this.config.config.antiAdblock.showOnlyOnce) {
+        // لا تفعل شيئاً، الرسالة ستبقى
+    }
+}
 
+// === منع التفاعل مع الصفحة ===
+blockPageInteraction() {
+    // منع النقر على الروابط
+    document.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' || e.target.closest('a')) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showWarningMessage('Please disable your ad blocker to access links');
+        }
+    }, true);
+    
+    // منع النقر على الأزرار
+    document.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            if (!e.target.closest('#adblock-overlay')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showWarningMessage('Please disable your ad blocker to use buttons');
+            }
+        }
+    }, true);
+    
+    // منع النماذج
+    document.addEventListener('submit', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showWarningMessage('Please disable your ad blocker to submit forms');
+    }, true);
+    
+    // منع النقر بزر الماوس الأيمن
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        this.showWarningMessage('Right-click disabled - please disable ad blocker');
+    });
+    
+    // منع اختصارات لوحة المفاتيح
+    document.addEventListener('keydown', (e) => {
+        // منع F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            this.showWarningMessage('Developer tools disabled - please disable ad blocker');
+        }
+        
+        // منع Ctrl+Shift+I
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            this.showWarningMessage('Developer tools disabled - please disable ad blocker');
+        }
+        
+        // منع Ctrl+U
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            this.showWarningMessage('View source disabled - please disable ad blocker');
+        }
+    });
+    
+    // إخفاء اللعبة إذا كانت موجودة
+    const gameIframe = document.getElementById('game-iframe');
+    if (gameIframe) {
+        gameIframe.style.display = 'none';
+    }
+    
+    // إخفاء محتوى الصفحة
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.style.opacity = '0.1';
+        mainContent.style.pointerEvents = 'none';
+    }
+}
+
+// === إظهار رسائل تحذير صغيرة ===
+showWarningMessage(message) {
+    const warning = document.createElement('div');
+    warning.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #e74c3c;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 9999999;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideIn 0.3s ease;
+        max-width: 300px;
+    `;
+    
+    warning.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">⚠️</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // إضافة أنيميشن
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(warning);
+    
+    // إزالة الرسالة بعد 3 ثواني
+    setTimeout(() => {
+        if (warning.parentNode) {
+            warning.parentNode.removeChild(warning);
+        }
+    }, 3000);
+}
   // === 3. تحميل Popunder ===
   loadPopunder() {
     if (!this.config.popunder?.enabled) return;
