@@ -1,5 +1,5 @@
 /**
- * 🎯 نظام إدارة الإعلانات الذكية - النسخة المحسنة
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسنة
  * نظام Anti-AdBlock فعال مع جميع الإعلانات الـ 10
  */
 
@@ -537,7 +537,7 @@ class AdsManager {
     
     setTimeout(() => {
       if (ad.config) {
-        const atOptions = ad.config;
+        window.atOptions = ad.config;
       }
       
       const script = document.createElement('script');
@@ -759,7 +759,7 @@ class AdsManager {
     container.appendChild(adDiv);
     
     setTimeout(() => {
-      const atOptions = ad.config;
+      window.atOptions = ad.config;
       const script = document.createElement('script');
       script.src = ad.script;
       script.async = true;
@@ -795,50 +795,28 @@ class AdsManager {
   }
 
   // === 14. تحميل Popunder ===
-loadPopunder() {
-  if (!this.config.popunder?.enabled) return;
-  
-  const frequency = this.config.popunder.frequency;
-  
-  // التحكم بعدد مرات عرض البوب اندر في الجلسة
-  if (frequency === 'once_per_session' && this.sessionData.popunderShown >= 1) {
-    return;
-  }
-  
-  if (frequency === 'twice_per_session' && this.sessionData.popunderShown >= 2) {
-    return;
-  }
-  
-  // حساب التأخير بناءً على عدد المرات السابقة
-  const delay = this.sessionData.popunderShown === 0 
-    ? this.config.popunder.delay || 8000 
-    : 120000; // تأخير 2 دقيقة للبوب اندر الثاني
-  
-  setTimeout(() => {
-    // تحميل سكريبتات البوب اندر
-    const scriptsToLoad = this.config.popunder.scripts;
+  loadPopunder() {
+    if (!this.config.popunder?.enabled) return;
     
-    if (Array.isArray(scriptsToLoad)) {
-      scriptsToLoad.forEach((scriptUrl, index) => {
-        setTimeout(() => {
-          const script = document.createElement('script');
-          script.src = scriptUrl;
-          script.async = true;
-          script.setAttribute('data-cfasync', 'false');
-          script.id = `popunder-script-${Date.now()}-${index}`;
-          document.body.appendChild(script);
-          console.log('✅ Popunder script loaded:', scriptUrl);
-        }, index * 2000); // فرق 2 ثانية بين كل سكريبت
-      });
+    const frequency = this.config.popunder.frequency;
+    if (frequency === 'once_per_session' && this.sessionData.popunderShown) {
+      return;
     }
     
-    // تحديث عدد مرات العرض
-    this.sessionData.popunderShown = (this.sessionData.popunderShown || 0) + 1;
-    this.saveSessionData();
-    console.log(`📊 Popunder shown ${this.sessionData.popunderShown} time(s) in this session`);
-    
-  }, delay);
-}
+    setTimeout(() => {
+      this.config.popunder.scripts.forEach(scriptUrl => {
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        document.body.appendChild(script);
+        console.log('✅ Popunder script loaded:', scriptUrl);
+      });
+      
+      this.sessionData.popunderShown = true;
+      this.saveSessionData();
+    }, this.config.popunder.delay || 8000);
+  }
 
   // === 15. تحميل Smartlink ===
   loadSmartlink() {
