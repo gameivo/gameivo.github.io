@@ -1,10 +1,9 @@
 {
   "antiAdblock": {
     "enabled": true,
-    "strictMode": true,
-    "blockPage": true,
-    "message": "Ad Blocker Detected - Please disable ad blocker to access this free game",
-    "monitoring": true
+    "showWarning": true,
+    "warningPosition": "bottom-right",
+    "warningDuration": 10000
   },
   
   "popunder": {
