@@ -8,10 +8,11 @@
   
   "popunder": {
     "enabled": true,
-    "frequency": "once_per_session",
+    "frequency": "twice_per_session",  // تغيير من once_per_session إلى twice_per_session
     "delay": 8000,
     "scripts": [
-      "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js"
+      "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js",
+      "https://pl28343660.effectivegatecpm.com/d3/01/ff/d301ff1e4475b527cf2dccff540822e5.js"
     ]
   },
   
@@ -54,6 +55,16 @@
             "height": 50,
             "width": 320
           }
+        },
+        {
+          "id": "banner-468x60-bottom",
+          "script": "https://www.highperformanceformat.com/b07536416d988628a30c9fd13c94a851/invoke.js",
+          "config": {
+            "key": "b07536416d988628a30c9fd13c94a851",
+            "format": "iframe",
+            "height": 60,
+            "width": 468
+          }
         }
       ]
     },
@@ -61,6 +72,7 @@
     "pageBottom": {
       "enabled": true,
       "rotation": true,
+      "rotationInterval": 35000,
       "ads": [
         {
           "id": "banner-728x90-bottom",
@@ -70,6 +82,16 @@
             "format": "iframe",
             "height": 90,
             "width": 728
+          }
+        },
+        {
+          "id": "banner-468x60-bottom-2",
+          "script": "https://www.highperformanceformat.com/b07536416d988628a30c9fd13c94a851/invoke.js",
+          "config": {
+            "key": "b07536416d988628a30c9fd13c94a851",
+            "format": "iframe",
+            "height": 60,
+            "width": 468
           }
         }
       ]
@@ -89,6 +111,26 @@
           "format": "iframe",
           "height": 300,
           "width": 160
+        }
+      },
+      {
+        "id": "sidebar-160x600",
+        "script": "https://www.highperformanceformat.com/c4bc6a456a9544ff74b98a472c52ea91/invoke.js",
+        "config": {
+          "key": "c4bc6a456a9544ff74b98a472c52ea91",
+          "format": "iframe",
+          "height": 600,
+          "width": 160
+        }
+      },
+      {
+        "id": "sidebar-300x250",
+        "script": "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
+        "config": {
+          "key": "c84b7f14ef2b488fb99e7411123accf1",
+          "format": "iframe",
+          "height": 250,
+          "width": 300
         }
       }
     ]
