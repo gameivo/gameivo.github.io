@@ -809,7 +809,7 @@
                     card.setAttribute('data-title', game.title.toLowerCase());
 
                     const shortDesc = game.description && game.description.length > 120
-                        ? game.description.substring(0, 20) + "..."
+                        ? game.description.substring(0, 0) + "..."
                         : game.description || "";
 
                     card.innerHTML = `
