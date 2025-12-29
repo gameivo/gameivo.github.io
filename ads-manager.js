@@ -738,50 +738,73 @@ class AdsManager {
   }
 
   // === 13. تحميل Popunder - مُصلح ✅ ===
-  loadPopunder() {
-    if (!this.config.popunder?.enabled) return;
+  // === 14. تحميل Popunder ===
+loadPopunder() {
+  if (!this.config.popunder?.enabled) return;
+  
+  console.log('🔍 التحقق من حالة البوب أندر في الجلسة...');
+  
+  // تحديث بيانات الجلسة أولاً
+  this.sessionData = this.getSessionData();
+  
+  const frequency = this.config.popunder.frequency;
+  
+  // التحكم بعدد مرات عرض البوب اندر في الجلسة
+  if (frequency === 'once_per_session') {
+    if (this.sessionData.popunderShown) {
+      console.log('⏸️ البوب أندر معروض مسبقاً في هذه الجلسة - تخطي');
+      return;
+    }
+  }
+  
+  if (frequency === 'twice_per_session') {
+    const popunderCount = this.sessionData.popunderShown || 0;
+    if (popunderCount >= 2) {
+      console.log(`⏸️ البوب أندر معروض ${popunderCount} مرات في هذه الجلسة - تخطي`);
+      return;
+    }
+  }
+  
+  console.log('✅ البوب أندر غير معروض بعد - البدء في التحميل...');
+  
+  const delay = this.config.popunder.delay || 8000;
+  
+  setTimeout(() => {
+    const scriptsToLoad = this.config.popunder.scripts;
     
-    const frequency = this.config.popunder.frequency;
-    const maxPerSession = this.config.popunder.maxPerSession || 1;
-    
-    // التحقق من عدد المرات المسموح بها
-    if (frequency === 'once_per_session') {
-      const currentCount = this.sessionData.popunderCount || 0;
-      
-      if (currentCount >= maxPerSession) {
-        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
-        return;
-      }
+    if (Array.isArray(scriptsToLoad)) {
+      scriptsToLoad.forEach((scriptUrl, index) => {
+        setTimeout(() => {
+          const script = document.createElement('script');
+          script.src = scriptUrl;
+          script.async = true;
+          script.setAttribute('data-cfasync', 'false');
+          script.id = `popunder-script-${Date.now()}-${index}`;
+          document.body.appendChild(script);
+          console.log('✅ Popunder script loaded:', scriptUrl);
+        }, index * 2000);
+      });
+    } else if (scriptsToLoad) {
+      const script = document.createElement('script');
+      script.src = scriptsToLoad;
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      document.body.appendChild(script);
+      console.log('✅ Popunder script loaded');
     }
     
-    setTimeout(() => {
-      this.config.popunder.scripts.forEach((scriptUrl, index) => {
-        // التحقق من عدم تحميل السكريبت مسبقاً
-        if (this.loadedScripts.has(scriptUrl)) {
-          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = scriptUrl;
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        script.id = `popunder-script-${index}`;
-        
-        document.body.appendChild(script);
-        this.loadedScripts.add(scriptUrl);
-        
-        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-      });
-      
-      // تحديث العداد
-      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
+    // تحديث عدد مرات العرض في بيانات الجلسة
+    if (frequency === 'once_per_session') {
       this.sessionData.popunderShown = true;
-      this.saveSessionData();
-      
-      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
-    }, this.config.popunder.delay || 8000);
-  }
+    } else if (frequency === 'twice_per_session') {
+      this.sessionData.popunderShown = (this.sessionData.popunderShown || 0) + 1;
+    }
+    
+    this.saveSessionData();
+    console.log(`📊 تم تحديث عداد البوب أندر: ${this.sessionData.popunderShown || 0}`);
+    
+  }, delay);
+}
 
   // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
