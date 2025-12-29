@@ -8,7 +8,7 @@
   
   "popunder": {
     "enabled": true,
-    "frequency": "once_per_session",  // أو "twice_per_session" حسب رغبتك
+    "frequency": "once_per_session",  // أو "twice_per_session" حس رغبتك
     "delay": 8000,
     "scripts": [
       "https://pl28343660.effectivegatecpm.com/d3/01/ff/d301ff1e4475b527cf2dccff540822e5.js"
