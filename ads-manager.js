@@ -491,14 +491,33 @@ class AdsManager {
   }
 
   loadBannerAd(containerId, bannerConfig) {
-    const container = this.ensureContainerExists(containerId);
-    if (!container) {
-      console.warn(`❌ Container ${containerId} not found`);
-      return;
-    }
+  const container = this.ensureContainerExists(containerId);
+  if (!container) return;
+
+  const allAds = bannerConfig.ads;
+  if (!allAds || allAds.length === 0) return;
+
+  // 📱 فلترة الإعلانات لتناسب عرض الشاشة
+  const screenWidth = window.innerWidth;
+  let suitableAds = allAds.filter(ad => ad.config.width <= (screenWidth - 20));
+
+  // إذا لم نجد إعلان مناسب الحجم، نأخذ أصغر إعلان متاح
+  if (suitableAds.length === 0) {
+    suitableAds = [allAds.sort((a, b) => a.config.width - b.config.width)[0]];
+  }
+
+  let currentIndex = 0;
+  this.loadSingleAd(container, suitableAds[currentIndex], containerId);
+
+  if (bannerConfig.rotation && suitableAds.length > 1) {
+    if (this.rotationTimers[containerId]) clearInterval(this.rotationTimers[containerId]);
     
-    const ads = bannerConfig.ads;
-    if (!ads || ads.length === 0) return;
+    this.rotationTimers[containerId] = setInterval(() => {
+      currentIndex = (currentIndex + 1) % suitableAds.length;
+      this.loadSingleAd(container, suitableAds[currentIndex], containerId);
+    }, bannerConfig.rotationInterval || 30000);
+  }
+}
     
     // تحميل أول إعلان
     this.loadSingleAd(container, ads[0], containerId);
@@ -993,36 +1012,34 @@ class AdsManager {
   }
 
   // === 19. إدارة الجلسة ===
-  getSessionData() {
-    try {
-      const data = sessionStorage.getItem('adsSessionData');
-      return data ? JSON.parse(data) : {
-        popunderShown: false,
-        popunderCount: 0,
-        smartlinkOpened: false,
-        adsLoaded: 0,
-        sessionId: Date.now()
-      };
-    } catch (error) {
-      console.error('خطأ في قراءة بيانات الجلسة:', error);
-      return {
-        popunderShown: false,
-        popunderCount: 0,
-        smartlinkOpened: false,
-        adsLoaded: 0,
-        sessionId: Date.now()
-      };
-    }
-  }
+// === إدارة البيانات بشكل دائم ===
+getSessionData() {
+  try {
+    const data = localStorage.getItem('ads_manager_data');
+    const parsed = data ? JSON.parse(data) : {
+      popunderCount: 0,
+      lastReset: Date.now()
+    };
 
-  saveSessionData() {
-    try {
-      sessionStorage.setItem('adsSessionData', JSON.stringify(this.sessionData));
-      console.log('💾 تم حفظ بيانات الجلسة:', this.sessionData);
-    } catch (error) {
-      console.error('خطأ في حفظ بيانات الجلسة:', error);
+    // إعادة تعيين العداد إذا مر أكثر من 24 ساعة (اختياري)
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (Date.now() - parsed.lastReset > oneDay) {
+      return { popunderCount: 0, lastReset: Date.now() };
     }
+    
+    return parsed;
+  } catch (error) {
+    return { popunderCount: 0, lastReset: Date.now() };
   }
+}
+
+saveSessionData() {
+  try {
+    localStorage.setItem('ads_manager_data', JSON.stringify(this.sessionData));
+  } catch (error) {
+    console.error('Error saving data:', error);
+  }
+}
 
   // === 20. تصفية أخطاء Unity ===
   filterUnityErrors() {
@@ -1079,6 +1096,19 @@ document.addEventListener('DOMContentLoaded', () => {
       border-color: rgba(255,255,255,0.3);
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
+
+   .ad-banner {
+    max-width: 100%;
+    overflow: hidden; /* يمنع ظهور شريط تمرير عرضي */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ad-banner iframe, .ad-banner div {
+    max-width: 100% !important;
+    height: auto !important;
+}
     
     .ad-label {
       position: absolute;
