@@ -1,5 +1,7 @@
+[file name]: ads-manager.js
+[file content begin]
 /**
- * 🎯 نظام إدارة الإعلانات الذكية - النسخة المحسّنة والمُصلحة
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
  * ✅ إصلاح البانرات السوداء
  * ✅ إصلاح Popunder للعمل مرة واحدة فقط
  * ✅ إضافة جميع الإعلانات الجديدة
@@ -15,13 +17,6 @@ class AdsManager {
     this.adElements = new Map();
     this.loadedScripts = new Set(); // تتبع السكريبتات المحملة
     this.popunderCount = 0; // عداد Popunder
-    this.isMobile = this.detectMobile();
-  }
-
-  // === اكتشاف إذا كان الجهاز محمول ===
-  detectMobile() {
-    return window.innerWidth <= 768 || 
-           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
   // === 1. تحميل الإعدادات ===
@@ -472,7 +467,7 @@ class AdsManager {
     this.loadSmartlink();
   }
 
-  // === 7. تحميل البانرات - محسنة للهواتف ===
+  // === 7. تحميل البانرات ===
   async loadBanners() {
     console.log('🖼️ تحميل البانرات...');
     
@@ -528,7 +523,7 @@ class AdsManager {
     }
   }
 
-  // === دالة محسنة لتحميل الإعلان مع دعم الهواتف ===
+  // === التصحيح الرئيسي: إصلاح دالة تحميل الإعلان ===
   loadSingleAd(container, ad, containerId) {
     if (!ad || !ad.script) return;
     
@@ -536,37 +531,32 @@ class AdsManager {
     
     const uniqueId = `${ad.id}-${Date.now()}`;
     
-    // ⚠️ تحديد الإعلان المناسب للجهاز
-    let adConfig = ad.config;
-    let adScript = ad.script;
-    
-    if (this.isMobile && ad.mobileConfig) {
-      console.log(`📱 تحميل نسخة محمولة للإعلان: ${ad.id}`);
-      adConfig = {
-        ...ad.config,
-        ...ad.mobileConfig
-      };
-      adScript = ad.mobileConfig.script;
-    }
-    
     // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
     window.atOptions = window.atOptions || {};
     Object.assign(window.atOptions, {
-        ...adConfig,
-        params: adConfig?.params || {}
+        ...ad.config,
+        params: ad.config?.params || {}
     });
     
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner';
     adDiv.id = `ad-wrapper-${uniqueId}`;
     
-    // ⚠️ ضبط الأبعاد حسب الجهاز
-    const height = this.isMobile ? (adConfig.height || 90) : (adConfig.height || 90);
-    const width = this.isMobile ? (adConfig.width || 320) : (adConfig.width || 728);
+    // ✅ **إضافة: ضبط الأبعاد للهواتف**
+    let height = ad.config?.height || 90;
+    let width = ad.config?.width || 728;
+    
+    // إذا كان الجهاز محمولاً، ضبط الأبعاد
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      // تقليل الأبعاد للهواتف
+      if (width > 320) width = 320;
+      if (height > 100 && !containerId.includes('sidebar')) height = 100;
+    }
     
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="banner-${uniqueId}" style="text-align:center;min-height:${height}px;background:transparent;max-width:${width}px;margin:0 auto;"></div>
+      <div id="banner-${uniqueId}" style="text-align:center;min-height:${height}px;background:transparent;max-width:${width}px;margin:0 auto;overflow:hidden;"></div>
     `;
     
     container.innerHTML = '';
@@ -574,13 +564,13 @@ class AdsManager {
     
     setTimeout(() => {
         const script = document.createElement('script');
-        script.src = adScript;
+        script.src = ad.script;
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
         script.id = `script-${uniqueId}`;
         
         script.onload = () => {
-            console.log(`✅ تم تحميل إعلان: ${ad.id} (${this.isMobile ? 'موبايل' : 'ديسكتوب'})`);
+            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
         };
         
         script.onerror = () => {
@@ -616,7 +606,7 @@ class AdsManager {
     const extraContainer = document.createElement('div');
     extraContainer.id = 'ad-sidebar-extra';
     extraContainer.style.cssText = `
-      min-height: ${this.isMobile ? '150px' : '300px'};
+      min-height: 300px;
       margin: 20px 0;
       background: rgba(0,0,0,0.7);
       border-radius: 8px;
@@ -662,7 +652,7 @@ class AdsManager {
     }
   }
 
-  // === 11. تحميل إعلانات Sidebar - محسنة للهواتف ===
+  // === 11. تحميل إعلانات Sidebar ===
   loadSidebarAds() {
     if (!this.config.sidebarAd?.enabled) return;
     
@@ -691,40 +681,35 @@ class AdsManager {
     }
   }
 
-  // === دالة محسنة لتحميل إعلان Sidebar مع دعم الهواتف ===
+  // === التصحيح: دالة تحميل إعلان Sidebar ===
   loadSidebarAd(container, ad) {
     const uniqueId = `${ad.id}-${Date.now()}`;
-    
-    // ⚠️ تحديد الإعلان المناسب للجهاز
-    let adConfig = ad.config;
-    let adScript = ad.script;
-    
-    if (this.isMobile && ad.mobileConfig) {
-      console.log(`📱 تحميل نسخة محمولة لإعلان Sidebar: ${ad.id}`);
-      adConfig = {
-        ...ad.config,
-        ...ad.mobileConfig
-      };
-      adScript = ad.mobileConfig.script;
-    }
     
     // ⚠️ التصحيح: استخدام atOptions ثابت
     window.atOptions = window.atOptions || {};
     Object.assign(window.atOptions, {
-        ...adConfig,
-        params: adConfig?.params || {}
+        ...ad.config,
+        params: ad.config?.params || {}
     });
     
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner ad-sidebar';
     
-    // ⚠️ ضبط الأبعاد حسب الجهاز
-    const height = this.isMobile ? (adConfig.height || 150) : (adConfig.height || 300);
-    const width = this.isMobile ? '100%' : (adConfig.width || 160);
+    // ✅ **إضافة: ضبط الأبعاد للهواتف**
+    let height = ad.config?.height || 300;
+    let width = ad.config?.width || 160;
+    
+    // إذا كان الجهاز محمولاً، ضبط الأبعاد
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      // تقليل الأبعاد للهواتف
+      if (width > 300) width = 300;
+      if (height > 200) height = 200;
+    }
     
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${height}px;background:transparent;max-width:${width};margin:0 auto;"></div>
+      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${height}px;background:transparent;max-width:${width}px;margin:0 auto;overflow:hidden;"></div>
     `;
     
     container.innerHTML = '';
@@ -732,13 +717,13 @@ class AdsManager {
     
     setTimeout(() => {
         const script = document.createElement('script');
-        script.src = adScript;
+        script.src = ad.script;
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
         script.id = `sidebar-script-${uniqueId}`;
         
         script.onload = () => {
-            console.log(`✅ Sidebar Ad loaded: ${ad.id} (${this.isMobile ? 'موبايل' : 'ديسكتوب'})`);
+            console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
         };
         
         script.onerror = () => {
@@ -780,14 +765,14 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - مُصلح تماماً ✅ ===
+  // === 13. تحميل Popunder - مُصلح مع localStorage ✅ ===
   loadPopunder() {
     if (!this.config.popunder?.enabled) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
     
-    // ⚠️ التصحيح: استخدام localStorage بدلاً من sessionStorage
+    // ✅ **إضافة: استخدام localStorage للتتبع عبر الجلسات**
     const now = Date.now();
     const lastPopupTime = localStorage.getItem('popunder_last_shown');
     const popupCount = parseInt(localStorage.getItem('popunder_count') || '0');
@@ -795,10 +780,10 @@ class AdsManager {
     // التحقق من الوقت بين البوبات (ساعة واحدة على الأقل)
     if (lastPopupTime) {
       const timeDiff = now - parseInt(lastPopupTime);
-      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      const minutesDiff = timeDiff / (1000 * 60);
       
-      if (hoursDiff < 1) {
-        console.log(`⏰ Popunder shown recently (${Math.round(hoursDiff * 60)} minutes ago). Skipping.`);
+      if (minutesDiff < 60) { // أقل من ساعة
+        console.log(`⏰ Popunder shown ${Math.round(minutesDiff)} minutes ago. Skipping.`);
         return;
       }
     }
@@ -811,23 +796,11 @@ class AdsManager {
       }
     }
     
-    // التحقق من وقت الجلسة (30 دقيقة)
-    const sessionStart = sessionStorage.getItem('session_start');
-    if (sessionStart) {
-      const sessionTime = now - parseInt(sessionStart);
-      const minutes = sessionTime / (1000 * 60);
-      
-      if (minutes < 1) {
-        console.log(`⏳ Waiting for user to interact (${Math.round(minutes)} minutes)...`);
-        return;
-      }
-    }
-    
     setTimeout(() => {
       this.config.popunder.scripts.forEach((scriptUrl, index) => {
-        // التحقق من عدم تحميل السكريبت مسبقاً في هذه الصفحة
+        // التحقق من عدم تحميل السكريبت مسبقاً
         if (this.loadedScripts.has(scriptUrl)) {
-          console.log(`⚠️ Popunder script already loaded in this page: ${scriptUrl}`);
+          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
           return;
         }
         
@@ -843,17 +816,16 @@ class AdsManager {
         console.log(`✅ Popunder script loaded: ${scriptUrl}`);
       });
       
-      // تحديث البيانات في localStorage
+      // ✅ **تحديث البيانات في localStorage (يعمل عبر refresh)**
       localStorage.setItem('popunder_last_shown', now.toString());
       localStorage.setItem('popunder_count', (popupCount + 1).toString());
       
-      // تحديث البيانات في sessionStorage
+      // تحديث البيانات في sessionStorage أيضاً للحفاظ على التوافق
       this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
       this.sessionData.popunderShown = true;
       this.saveSessionData();
       
       console.log(`📊 Popunder count: ${popupCount + 1}/${maxPerSession}`);
-      console.log(`⏰ Next popunder available after: ${new Date(now + (60 * 60 * 1000)).toLocaleTimeString()}`);
     }, this.config.popunder.delay || 8000);
   }
 
@@ -863,7 +835,7 @@ class AdsManager {
     
     const frequency = this.config.smartlink.frequency;
     
-    // ⚠️ التصحيح: استخدام localStorage للتتبع
+    // ✅ **إضافة: استخدام localStorage للتتبع**
     if (frequency === 'once_per_session') {
       const smartlinkShown = localStorage.getItem('smartlink_shown');
       const today = new Date().toDateString();
@@ -903,7 +875,7 @@ class AdsManager {
     setTimeout(() => checkGameLoaded(), 2000);
   }
 
-  // === 15. فحص وإصلاح الحاويات - محسنة للهواتف ===
+  // === 15. فحص وإصلاح الحاويات ===
   fixAdContainers() {
     console.log('🔧 فحص وإصلاح حاويات الإعلانات...');
     
@@ -922,8 +894,8 @@ class AdsManager {
         container = document.createElement('div');
         container.id = containerId;
         container.style.cssText = `
-          min-height: ${this.isMobile ? '30px' : '50px'};
-          margin: 15px 0;
+          min-height: 50px;
+          margin: 20px 0;
           position: relative;
           background: transparent;
           overflow: hidden;
@@ -975,7 +947,7 @@ class AdsManager {
             break;
         }
         
-        console.log(`✅ تم إنشاء حاوية: ${containerId} (${this.isMobile ? 'موبايل' : 'ديسكتوب'})`);
+        console.log(`✅ تم إنشاء حاوية: ${containerId}`);
       }
     });
   }
@@ -989,8 +961,8 @@ class AdsManager {
       container = document.createElement('div');
       container.id = containerId;
       container.style.cssText = `
-        min-height: ${this.isMobile ? '30px' : '50px'};
-        margin: 15px 0;
+        min-height: 50px;
+        margin: 20px 0;
         position: relative;
         background: transparent;
         overflow: hidden;
@@ -1074,14 +1046,9 @@ class AdsManager {
     }, 15000);
   }
 
-  // === 19. إدارة الجلسة - محسنة ===
+  // === 19. إدارة الجلسة ===
   getSessionData() {
     try {
-      // ⚠️ التصحيح: تهيئة وقت بدء الجلسة
-      if (!sessionStorage.getItem('session_start')) {
-        sessionStorage.setItem('session_start', Date.now().toString());
-      }
-      
       const data = sessionStorage.getItem('adsSessionData');
       return data ? JSON.parse(data) : {
         popunderShown: false,
@@ -1143,16 +1110,11 @@ class AdsManager {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 بدء تشغيل نظام الإعلانات...');
   
-  // ⚠️ تهيئة بيانات الجلسة
-  if (!sessionStorage.getItem('session_start')) {
-    sessionStorage.setItem('session_start', Date.now().toString());
-  }
-  
   const adsManager = new AdsManager();
   adsManager.init();
   window.adsManager = adsManager;
   
-  // إضافة أنماط CSS محسنة للهواتف
+  // إضافة أنماط CSS محسنة مع تحسينات للهواتف
   const style = document.createElement('style');
   style.textContent = `
     .ad-banner {
@@ -1235,12 +1197,13 @@ document.addEventListener('DOMContentLoaded', () => {
       pointer-events: auto !important;
     }
     
-    /* تحسين العرض على الأجهزة المحمولة */
+    /* ✅ **تحسينات للهواتف** */
     @media (max-width: 768px) {
       .ad-banner {
         padding: 10px;
         margin: 15px 0;
         min-height: 40px;
+        border-radius: 6px;
       }
       
       .ad-sidebar {
@@ -1263,11 +1226,13 @@ document.addEventListener('DOMContentLoaded', () => {
         padding: 1px 4px;
       }
       
-      /* إخفاء بعض الإعلانات على الهواتف إذا كانت كبيرة جداً */
-      .ad-banner:has(iframe[width="728"]) {
-        transform: scale(0.85);
+      /* تقليل حجم البانرات الكبيرة على الهواتف */
+      .ad-banner iframe[width="728"],
+      .ad-banner iframe[width="468"] {
+        max-width: 100% !important;
+        height: auto !important;
+        transform: scale(0.9);
         transform-origin: center;
-        margin: 10px -15px;
       }
     }
     
@@ -1275,8 +1240,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .ad-banner {
         padding: 8px;
         margin: 10px 0;
-        min-height: 30px;
-        border-radius: 6px;
+        min-height: 35px;
+        border-radius: 4px;
       }
       
       .ad-label {
@@ -1284,13 +1249,16 @@ document.addEventListener('DOMContentLoaded', () => {
         padding: 1px 3px;
       }
       
-      /* ضبط البانرات الكبيرة للهواتف الصغيرة */
-      .ad-banner:has(iframe[width="728"]),
-      .ad-banner:has(iframe[width="468"]) {
-        transform: scale(0.75);
-        margin: 5px -20px;
-        overflow: hidden;
-        max-height: 100px;
+      /* إخفاء بعض الإعلانات على الهواتف الصغيرة إذا كانت كبيرة جداً */
+      .ad-banner:has(iframe[width="728"]) {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .ad-banner:has(iframe[width="728"]) iframe {
+        max-width: 95vw !important;
+        transform: scale(0.8);
       }
     }
     
