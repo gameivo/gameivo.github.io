@@ -1,5 +1,5 @@
 /**
- * 🎯 نظام إدارة الإعلانات الذكية - النسخة المحسّنة والمُصلحة
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
  * ✅ إصلاح البانرات السوداء
  * ✅ إصلاح Popunder للعمل مرة واحدة فقط
  * ✅ إضافة جميع الإعلانات الجديدة
@@ -499,7 +499,14 @@ class AdsManager {
     
     const ads = bannerConfig.ads;
     if (!ads || ads.length === 0) return;
-    
+    // منع الإعلانات الكبيرة على الموبايل
+const screenWidth = window.innerWidth;
+
+if (screenWidth <= 480 && ad.config.width > 360) {
+  console.log(`📱 تخطي إعلان كبير على الهاتف: ${ad.id}`);
+  return;
+}
+
     // تحميل أول إعلان
     this.loadSingleAd(container, ads[0], containerId);
     
@@ -539,22 +546,9 @@ class AdsManager {
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner';
     adDiv.id = `ad-wrapper-${uniqueId}`;
-    
-    // ✅ **إضافة: ضبط الأبعاد للهواتف**
-    let height = ad.config?.height || 90;
-    let width = ad.config?.width || 728;
-    
-    // إذا كان الجهاز محمولاً، ضبط الأبعاد
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      // تقليل الأبعاد للهواتف
-      if (width > 320) width = 320;
-      if (height > 100 && !containerId.includes('sidebar')) height = 100;
-    }
-    
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="banner-${uniqueId}" style="text-align:center;min-height:${height}px;background:transparent;max-width:${width}px;margin:0 auto;overflow:hidden;"></div>
+      <div id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
     `;
     
     container.innerHTML = '';
@@ -692,22 +686,9 @@ class AdsManager {
     
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner ad-sidebar';
-    
-    // ✅ **إضافة: ضبط الأبعاد للهواتف**
-    let height = ad.config?.height || 300;
-    let width = ad.config?.width || 160;
-    
-    // إذا كان الجهاز محمولاً، ضبط الأبعاد
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      // تقليل الأبعاد للهواتف
-      if (width > 300) width = 300;
-      if (height > 200) height = 200;
-    }
-    
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${height}px;background:transparent;max-width:${width}px;margin:0 auto;overflow:hidden;"></div>
+      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 300}px;background:transparent;"></div>
     `;
     
     container.innerHTML = '';
@@ -763,85 +744,48 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - مُصلح مع localStorage ✅ ===
+  // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
     if (!this.config.popunder?.enabled) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
     
-    // ✅ **إضافة: استخدام localStorage للتتبع عبر الجلسات**
-    const now = Date.now();
-    const lastPopupTime = localStorage.getItem('popunder_last_shown');
-    const popupCount = parseInt(localStorage.getItem('popunder_count') || '0');
-    
-    // التحقق من الوقت بين البوبات (ساعة واحدة على الأقل)
-    if (lastPopupTime) {
-      const timeDiff = now - parseInt(lastPopupTime);
-      const minutesDiff = timeDiff / (1000 * 60);
-      
-      if (minutesDiff < 60) { // أقل من ساعة
-        console.log(`⏰ Popunder shown ${Math.round(minutesDiff)} minutes ago. Skipping.`);
-        return;
-      }
-    }
-    
-    // التحقق من العدد المسموح به
-    if (frequency === 'once_per_session') {
-      if (popupCount >= maxPerSession) {
-        console.log(`⚠️ Popunder limit reached: ${popupCount}/${maxPerSession}`);
-        return;
-      }
-    }
-    
-    setTimeout(() => {
-      this.config.popunder.scripts.forEach((scriptUrl, index) => {
-        // التحقق من عدم تحميل السكريبت مسبقاً
-        if (this.loadedScripts.has(scriptUrl)) {
-          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = scriptUrl;
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        script.id = `popunder-script-${index}`;
-        
-        document.body.appendChild(script);
-        this.loadedScripts.add(scriptUrl);
-        
-        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-      });
-      
-      // ✅ **تحديث البيانات في localStorage (يعمل عبر refresh)**
-      localStorage.setItem('popunder_last_shown', now.toString());
-      localStorage.setItem('popunder_count', (popupCount + 1).toString());
-      
-      // تحديث البيانات في sessionStorage أيضاً للحفاظ على التوافق
-      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
-      this.sessionData.popunderShown = true;
-      this.saveSessionData();
-      
-      console.log(`📊 Popunder count: ${popupCount + 1}/${maxPerSession}`);
-    }, this.config.popunder.delay || 8000);
+    // التحقق من عدد المرات المسموح بها
+    loadPopunder() {
+  if (!this.config.popunder?.enabled) return;
+
+  // 🔒 منع التكرار داخل نفس الصفحة فقط
+  if (this.sessionData.popunderShown) {
+    console.log('⚠️ Popunder already shown on this page');
+    return;
   }
+
+  setTimeout(() => {
+    this.config.popunder.scripts.forEach(scriptUrl => {
+      const script = document.createElement('script');
+      script.src = scriptUrl;
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      document.body.appendChild(script);
+    });
+
+    // ✅ تم عرضه في هذه الصفحة
+    this.sessionData.popunderShown = true;
+    sessionStorage.setItem('adsSessionData', JSON.stringify(this.sessionData));
+
+    console.log('✅ Popunder shown (will appear again after refresh)');
+  }, this.config.popunder.delay || 8000);
+}
 
   // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
     if (!this.config.smartlink?.enabled) return;
     
     const frequency = this.config.smartlink.frequency;
-    
-    // ✅ **إضافة: استخدام localStorage للتتبع**
-    if (frequency === 'once_per_session') {
-      const smartlinkShown = localStorage.getItem('smartlink_shown');
-      const today = new Date().toDateString();
-      
-      if (smartlinkShown === today) {
-        console.log('⚠️ Smartlink already shown today');
-        return;
-      }
+    if (frequency === 'once_per_session' && this.sessionData.smartlinkOpened) {
+      console.log('⚠️ Smartlink already opened in this session');
+      return;
     }
     
     const openSmartlink = () => {
@@ -849,7 +793,8 @@ class AdsManager {
         if (this.config.smartlink.openInNewTab) {
           const newTab = window.open(this.config.smartlink.url, '_blank', 'noopener,noreferrer');
           if (newTab) {
-            localStorage.setItem('smartlink_shown', new Date().toDateString());
+            this.sessionData.smartlinkOpened = true;
+            this.saveSessionData();
             console.log('✅ Smartlink opened in new tab');
           }
         } else {
@@ -896,7 +841,6 @@ class AdsManager {
           margin: 20px 0;
           position: relative;
           background: transparent;
-          overflow: hidden;
         `;
         
         // تحديد مكان الإدراج
@@ -963,7 +907,6 @@ class AdsManager {
         margin: 20px 0;
         position: relative;
         background: transparent;
-        overflow: hidden;
       `;
       
       // محاولة إيجاد مكان مناسب
@@ -1112,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adsManager.init();
   window.adsManager = adsManager;
   
-  // إضافة أنماط CSS محسنة مع تحسينات للهواتف
+  // إضافة أنماط CSS محسنة
   const style = document.createElement('style');
   style.textContent = `
     .ad-banner {
@@ -1125,7 +1068,6 @@ document.addEventListener('DOMContentLoaded', () => {
       border: 1px solid rgba(255,255,255,0.1);
       transition: all 0.3s ease;
       min-height: 50px;
-      overflow: hidden;
     }
     
     .ad-banner:hover {
@@ -1195,42 +1137,15 @@ document.addEventListener('DOMContentLoaded', () => {
       pointer-events: auto !important;
     }
     
-    /* ✅ **تحسينات للهواتف** */
+    /* تحسين العرض على الأجهزة المحمولة */
     @media (max-width: 768px) {
       .ad-banner {
         padding: 10px;
         margin: 15px 0;
-        min-height: 40px;
-        border-radius: 6px;
       }
       
       .ad-sidebar {
         position: static;
-        margin-bottom: 15px;
-      }
-      
-      #ad-above-iframe,
-      #ad-below-iframe {
-        margin: 10px 0;
-      }
-      
-      #ad-page-bottom,
-      #ad-page-middle {
-        margin: 15px 0;
-      }
-      
-      .ad-label {
-        font-size: 9px;
-        padding: 1px 4px;
-      }
-      
-      /* تقليل حجم البانرات الكبيرة على الهواتف */
-      .ad-banner iframe[width="728"],
-      .ad-banner iframe[width="468"] {
-        max-width: 100% !important;
-        height: auto !important;
-        transform: scale(0.9);
-        transform-origin: center;
       }
     }
     
@@ -1238,38 +1153,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .ad-banner {
         padding: 8px;
         margin: 10px 0;
-        min-height: 35px;
-        border-radius: 4px;
       }
-      
-      .ad-label {
-        font-size: 8px;
-        padding: 1px 3px;
-      }
-      
-      /* إخفاء بعض الإعلانات على الهواتف الصغيرة إذا كانت كبيرة جداً */
-      .ad-banner:has(iframe[width="728"]) {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      
-      .ad-banner:has(iframe[width="728"]) iframe {
-        max-width: 95vw !important;
-        transform: scale(0.8);
-      }
-    }
-    
-    /* منع الإعلانات من الخروج عن الحدود */
-    .ad-banner iframe,
-    .ad-banner div[id*="banner"],
-    .ad-banner div[id*="container"] {
-      max-width: 100% !important;
-      overflow: hidden !important;
     }
   `;
   document.head.appendChild(style);
   
   console.log('🎨 تم تحميل أنماط الإعلانات');
 });
-[file content end]
