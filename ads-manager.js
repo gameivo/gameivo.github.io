@@ -1016,36 +1016,44 @@ loadPopunder() {
   }
 
   // === 19. إدارة الجلسة ===
-  getSessionData() {
-    try {
-      const data = sessionStorage.getItem('adsSessionData');
-      return data ? JSON.parse(data) : {
-        popunderShown: false,
-        popunderCount: 0,
-        smartlinkOpened: false,
-        adsLoaded: 0,
-        sessionId: Date.now()
-      };
-    } catch (error) {
-      console.error('خطأ في قراءة بيانات الجلسة:', error);
+getSessionData() {
+  try {
+    const data = sessionStorage.getItem('adsSessionData');
+    if (data) {
+      const parsedData = JSON.parse(data);
+      console.log('📋 بيانات الجلسة المحملة:', parsedData);
       return {
-        popunderShown: false,
-        popunderCount: 0,
-        smartlinkOpened: false,
-        adsLoaded: 0,
-        sessionId: Date.now()
+        popunderShown: parsedData.popunderShown || false,
+        popunderCount: parsedData.popunderCount || 0,
+        smartlinkOpened: parsedData.smartlinkOpened || false,
+        adsLoaded: parsedData.adsLoaded || 0,
+        sessionStart: parsedData.sessionStart || Date.now()
       };
     }
+  } catch (e) {
+    console.warn('⚠️ خطأ في تحميل بيانات الجلسة:', e);
   }
+  
+  // بيانات افتراضية
+  return {
+    popunderShown: false,
+    popunderCount: 0,
+    smartlinkOpened: false,
+    adsLoaded: 0,
+    sessionStart: Date.now()
+  };
+}
 
-  saveSessionData() {
-    try {
-      sessionStorage.setItem('adsSessionData', JSON.stringify(this.sessionData));
-      console.log('💾 تم حفظ بيانات الجلسة:', this.sessionData);
-    } catch (error) {
-      console.error('خطأ في حفظ بيانات الجلسة:', error);
-    }
+saveSessionData() {
+  try {
+    // تحديث وقت آخر تعديل
+    this.sessionData.lastUpdated = Date.now();
+    sessionStorage.setItem('adsSessionData', JSON.stringify(this.sessionData));
+    console.log('💾 تم حفظ بيانات الجلسة:', this.sessionData);
+  } catch (e) {
+    console.warn('⚠️ خطأ في حفظ بيانات الجلسة:', e);
   }
+}
 
   // === 20. تصفية أخطاء Unity ===
   filterUnityErrors() {
