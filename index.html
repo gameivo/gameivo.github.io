@@ -25,12 +25,15 @@
     <meta name="twitter:description" content="Play the best unblocked games for free. Subway Surfers, Geometry Dash, Cookie Clicker and many more.">
     <meta property="og:site_name" content="FreePlayHub Games">
     <meta name="twitter:site" content="@FreePlayHub">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     <title>FreePlayHub - Best Unblocked Games Online | Free Games to Play</title>
     <link rel="canonical" href="https://rowhub.github.io">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     
     <!-- Unified Structured Data -->
-   <script type="application/ld+json">
+   <!-- استبدل الـ Structured Data القديم بهذا الكود المصلح -->
+<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
@@ -42,6 +45,11 @@
       "description": "Play the best unblocked games for free. Subway Surfers, Geometry Dash, Cookie Clicker and many more exciting games.",
       "publisher": {
         "@id": "https://rowhub.github.io/#organization"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://rowhub.github.io/?s={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     },
     {
@@ -51,8 +59,26 @@
       "url": "https://rowhub.github.io",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://rowhub.github.io/images/og-image.jpg"
-      }
+        "url": "https://rowhub.github.io/images/og-image.jpg",
+        "width": 1200,
+        "height": 630
+      },
+      "sameAs": [
+        "https://twitter.com/FreePlayHub"
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://rowhub.github.io/#webpage",
+      "url": "https://rowhub.github.io",
+      "name": "FreePlayHub - Best Unblocked Games Online | Free Games to Play",
+      "isPartOf": {
+        "@id": "https://rowhub.github.io/#website"
+      },
+      "about": {
+        "@id": "https://rowhub.github.io/#organization"
+      },
+      "description": "Play the best unblocked games for free. Subway Surfers, Geometry Dash, Cookie Clicker and many more exciting games."
     },
     {
       "@type": "BreadcrumbList",
@@ -70,11 +96,16 @@
           "item": "https://rowhub.github.io/games.html"
         }
       ]
+    },
+    {
+      "@type": "CollectionPage",
+      "name": "Unblocked Games Collection",
+      "description": "A comprehensive collection of free unblocked games including action, puzzle, sports, and racing games.",
+      "url": "https://rowhub.github.io"
     }
   ]
 }
 </script>
-
     
     <style>
         :root {
