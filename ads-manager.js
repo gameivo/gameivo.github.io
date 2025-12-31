@@ -432,37 +432,6 @@ class AdsManager {
   }
 
   // === 6. تحميل جميع الإعلانات ===
-  // 🔒 Popunder Hard Lock (NO repeat inside same page)
-(function () {
-  const POP_KEY = 'POPUNDER_LOCK';
-  const POP_TIME_KEY = 'POPUNDER_TIME';
-
-  const NOW = Date.now();
-  const COOLDOWN = 0; // 0 = لا يعيد الظهور إلا بعد refresh
-
-  const lastTime = sessionStorage.getItem(POP_TIME_KEY);
-  const isLocked = sessionStorage.getItem(POP_KEY);
-
-  // ⛔ إذا سبق ظهوره داخل الصفحة → امنعه
-  if (isLocked) {
-    console.log('⛔ Popunder blocked (already shown on this page)');
-    window.__BLOCK_POPUNDER__ = true;
-    return;
-  }
-
-  // ⛔ لو أردت تحكم زمني
-  if (lastTime && NOW - lastTime < COOLDOWN) {
-    console.log('⛔ Popunder blocked (cooldown)');
-    window.__BLOCK_POPUNDER__ = true;
-    return;
-  }
-
-  // ✅ السماح مرة واحدة فقط
-  sessionStorage.setItem(POP_KEY, '1');
-  sessionStorage.setItem(POP_TIME_KEY, NOW.toString());
-  window.__BLOCK_POPUNDER__ = false;
-})();
-
   async loadAllAds() {
     console.log('📦 بدء تحميل جميع الإعلانات...');
     
@@ -770,7 +739,7 @@ class AdsManager {
 
   // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
-    if (!this.config.popunder?.enabled) return;
+  if (window.__BLOCK_POPUNDER__) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
@@ -1082,6 +1051,37 @@ class AdsManager {
     console.log('🧹 تم تنظيف موارد الإعلانات');
   }
 }
+
+// 🔒 Popunder Hard Lock (NO repeat inside same page)
+(function () {
+  const POP_KEY = 'POPUNDER_LOCK';
+  const POP_TIME_KEY = 'POPUNDER_TIME';
+
+  const NOW = Date.now();
+  const COOLDOWN = 0; // 0 = لا يعيد الظهور إلا بعد refresh
+
+  const lastTime = sessionStorage.getItem(POP_TIME_KEY);
+  const isLocked = sessionStorage.getItem(POP_KEY);
+
+  // ⛔ إذا سبق ظهوره داخل الصفحة → امنعه
+  if (isLocked) {
+    console.log('⛔ Popunder blocked (already shown on this page)');
+    window.__BLOCK_POPUNDER__ = true;
+    return;
+  }
+
+  // ⛔ لو أردت تحكم زمني
+  if (lastTime && NOW - lastTime < COOLDOWN) {
+    console.log('⛔ Popunder blocked (cooldown)');
+    window.__BLOCK_POPUNDER__ = true;
+    return;
+  }
+
+  // ✅ السماح مرة واحدة فقط
+  sessionStorage.setItem(POP_KEY, '1');
+  sessionStorage.setItem(POP_TIME_KEY, NOW.toString());
+  window.__BLOCK_POPUNDER__ = false;
+})();
 
 // === تشغيل تلقائي ===
 document.addEventListener('DOMContentLoaded', () => {
