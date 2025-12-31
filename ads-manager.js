@@ -11,7 +11,6 @@ class AdsManager {
     this.config = null;
     this.rotationTimers = {};
     this.sessionData = this.getSessionData();
-    this.persistentData = this.getPersistentData();
     this.isAdBlockDetected = false;
     this.adElements = new Map();
     this.loadedScripts = new Set(); // تتبع السكريبتات المحملة
@@ -744,46 +743,20 @@ class AdsManager {
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
-    const maxPerDay = this.config.popunder.maxPerDay || 3; // الحد الأقصى يومياً
-    const intervalHours = this.config.popunder.intervalHours || 1; // الفاصل الزمني بالساعات
     
-    const now = Date.now();
-    const lastShown = this.persistentData.popunderLastShown || 0;
-    const dailyCount = this.persistentData.popunderDailyCount || 0;
-    const lastResetDate = this.persistentData.lastResetDate || 0;
-    
-    // إعادة تعيين العداد اليومي إذا مر يوم جديد
-    const today = new Date().toDateString();
-    if (lastResetDate !== today) {
-      this.persistentData.popunderDailyCount = 0;
-      this.persistentData.lastResetDate = today;
-      this.savePersistentData();
-    }
-
-    // 1. التحقق من الفاصل الزمني (مثلاً ساعة بين كل ظهور)
-    const hoursSinceLast = (now - lastShown) / (1000 * 60 * 60);
-    if (hoursSinceLast < intervalHours) {
-      console.log(`⏳ Popunder waiting for interval: ${hoursSinceLast.toFixed(2)}/${intervalHours} hours`);
-      return;
-    }
-
-    // 2. التحقق من الحد اليومي
-    if (this.persistentData.popunderDailyCount >= maxPerDay) {
-      console.log(`🚫 Popunder daily limit reached: ${this.persistentData.popunderDailyCount}/${maxPerDay}`);
-      return;
-    }
-
-    // 3. التحقق من عدد المرات في الجلسة الحالية (الكود الأصلي)
+    // التحقق من عدد المرات المسموح بها
     if (frequency === 'once_per_session') {
       const currentCount = this.sessionData.popunderCount || 0;
+      
       if (currentCount >= maxPerSession) {
-        console.log(`⚠️ Popunder session limit reached: ${currentCount}/${maxPerSession}`);
+        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
         return;
       }
     }
     
     setTimeout(() => {
       this.config.popunder.scripts.forEach((scriptUrl, index) => {
+        // التحقق من عدم تحميل السكريبت مسبقاً
         if (this.loadedScripts.has(scriptUrl)) {
           console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
           return;
@@ -799,19 +772,19 @@ class AdsManager {
         this.loadedScripts.add(scriptUrl);
         
         console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-      });
+       // --- إلغاء فعّاليته فور انتهائه من التنفيذ ---
+      setTimeout(() => {                       // <<<
+        script.remove();                       // <<< إزالته من DOM
+      }, 1000);                                // <<<
+    });
       
-      // تحديث بيانات الجلسة (الكود الأصلي)
-      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
-      this.sessionData.popunderShown = true;
-      this.saveSessionData();
-
-      // تحديث البيانات الدائمة (الإضافة الجديدة)
-      this.persistentData.popunderDailyCount = (this.persistentData.popunderDailyCount || 0) + 1;
-      this.persistentData.popunderLastShown = Date.now();
-      this.savePersistentData();
+ // --- تفريغ المصفوفة لمنع أي محاولة لاحقة ---
+    this.config.popunder.scripts = [];       // <<< لا يوجد شيء ليُعاد بعد الآن
+    this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
+    this.sessionData.popunderShown = true;
+    this.saveSessionData();
       
-      console.log(`📊 Popunder count: Session(${this.sessionData.popunderCount}/${maxPerSession}) Daily(${this.persistentData.popunderDailyCount}/${maxPerDay})`);
+      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
     }, this.config.popunder.delay || 8000);
   }
 
@@ -1053,33 +1026,6 @@ class AdsManager {
       console.log('💾 تم حفظ بيانات الجلسة:', this.sessionData);
     } catch (error) {
       console.error('خطأ في حفظ بيانات الجلسة:', error);
-    }
-  }
-
-  // === إدارة البيانات الدائمة (LocalStorage) ===
-  getPersistentData() {
-    try {
-      const data = localStorage.getItem('adsPersistentData');
-      return data ? JSON.parse(data) : {
-        popunderDailyCount: 0,
-        popunderLastShown: 0,
-        lastResetDate: new Date().toDateString()
-      };
-    } catch (error) {
-      console.error('خطأ في قراءة البيانات الدائمة:', error);
-      return {
-        popunderDailyCount: 0,
-        popunderLastShown: 0,
-        lastResetDate: new Date().toDateString()
-      };
-    }
-  }
-
-  savePersistentData() {
-    try {
-      localStorage.setItem('adsPersistentData', JSON.stringify(this.persistentData));
-    } catch (error) {
-      console.error('خطأ في حفظ البيانات الدائمة:', error);
     }
   }
 
