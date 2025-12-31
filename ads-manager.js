@@ -737,52 +737,52 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - نظام التحكم بالوقت والتكرار ===
+  // === 13. تحميل Popunder - تحكم دقيق (مرة واحدة لكل تحميل صفحة) ===
   loadPopunder() {
-    // 1. التحقق من التفعيل
     if (!this.config.popunder?.enabled) return;
     
-    // 2. قراءة الإعدادات من ملف JSON
-    // التأخير الأولي قبل أول ظهور
-    const initialDelay = this.config.popunder.delay || 5000; 
-    // الوقت بين كل ظهور وآخر (0 تعني لا تكرار)
-    const repeatInterval = this.config.popunder.repeatInterval || 0; 
+    // 1. قراءة التوقيت من الإعدادات
+    const delay = this.config.popunder.delay || 5000;         // وقت الانتظار قبل البدء
+    const repeatTime = this.config.popunder.repeatInterval || 0; // 0 تعني مرة واحدة فقط
     
-    // دالة تنفيذ الإعلان
-    const executePopunder = () => {
+    // متغير لتتبع هل الإعلان نشط حالياً في الصفحة
+    // هذا المتغير يُحذف تلقائياً عند عمل Refresh للصفحة
+    this.isPopunderRunning = false;
+
+    const runAd = () => {
+      // إذا كان الإعلان قد ظهر بالفعل والوقت مبرمج على 0 (مرة واحدة)، لا تفعل شيئاً
+      if (this.isPopunderRunning && repeatTime === 0) return;
+
       this.config.popunder.scripts.forEach((scriptUrl) => {
-        // حذف السكريبت القديم إذا كان موجوداً لضمان عمل الجديد
-        const oldScript = document.querySelector(`script[src^="${scriptUrl}"]`);
+        // إزالة السكريبت القديم إن وجد لضمان تشغيل الجديد
+        const oldScript = document.querySelector(`script[src="${scriptUrl}"]`);
         if (oldScript) oldScript.remove();
 
         const script = document.createElement('script');
-        // إضافة timestamp لمنع المتصفح من تجاهل السكريبت (Cache Busting)
-        script.src = `${scriptUrl}?t=${Date.now()}`; 
+        script.src = scriptUrl; // بدون أي إضافات لضمان عمل الرابط
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
-        document.body.appendChild(script);
         
-        console.log(`✅ Popunder Triggered at: ${new Date().toLocaleTimeString()}`);
+        document.body.appendChild(script);
+        console.log(`✅ Popunder Script Inserted`);
       });
+
+      this.isPopunderRunning = true; // وضع علامة أن الإعلان تم تشغيله
     };
 
-    // 3. التنفيذ المرة الأولى (بعد وقت التأخير المحدد)
-    console.log(`⏳ Popunder will start in ${initialDelay/1000} seconds`);
-    
+    // 2. التشغيل الأول بعد وقت التأخير (Delay)
+    console.log(`⏳ Popunder scheduled in ${delay/1000}s`);
     setTimeout(() => {
-      executePopunder();
+      runAd();
 
-      // 4. التحكم في التكرار (إذا كنت قد وضعت وقتاً في repeatInterval)
-      if (repeatInterval > 0) {
-        console.log(`🔄 Popunder scheduler: Will repeat every ${repeatInterval/1000} seconds`);
+      // 3. إذا كنت قد حددت وقتاً للتكرار في json، سيقوم بهذا الجزء
+      if (repeatTime > 0) {
+        console.log(`🔄 Popunder will repeat every ${repeatTime/1000}s`);
         setInterval(() => {
-          executePopunder();
-        }, repeatInterval);
-      } else {
-        console.log('🛑 Popunder scheduler: No repeat (Once per page load)');
+          runAd();
+        }, repeatTime);
       }
-
-    }, initialDelay);
+    }, delay);
   }
 
   // === 14. تحميل Smartlink - مُصلح ✅ ===
