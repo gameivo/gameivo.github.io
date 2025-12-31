@@ -1,9 +1,10 @@
 /**
- * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمفصلحة
  * ✅ إصلاح البانرات السوداء
  * ✅ إصلاح Popunder للعمل مرة واحدة فقط
  * ✅ إضافة جميع الإعلانات الجديدة
  * ✅ الحفاظ على نظام Anti-AdBlock
+ * ✅ تحكم كامل بعدد وتوقيت ظهور البوب اندر
  */
 
 class AdsManager {
@@ -11,10 +12,11 @@ class AdsManager {
     this.config = null;
     this.rotationTimers = {};
     this.sessionData = this.getSessionData();
+    this.popunderData = this.getPopunderData(); // بيانات البوب اندر الدائمة
     this.isAdBlockDetected = false;
     this.adElements = new Map();
-    this.loadedScripts = new Set(); // تتبع السكريبتات المحملة
-    this.popunderCount = 0; // عداد Popunder
+    this.loadedScripts = new Set();
+    this.popunderCount = 0;
   }
 
   // === 1. تحميل الإعدادات ===
@@ -29,7 +31,6 @@ class AdsManager {
       this.config = await response.json();
       console.log('✅ تم تحميل إعدادات الإعلانات');
       
-      // ✅ التحقق من تفعيل Anti-AdBlock
       const antiAdblockEnabled = this.config.antiAdblock?.enabled ?? true;
       
       if (antiAdblockEnabled) {
@@ -45,7 +46,6 @@ class AdsManager {
         console.log('⚠️ Anti-AdBlock معطّل - تخطي الفحص');
       }
       
-      // تحميل جميع الإعلانات
       await this.loadAllAds();
       console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
       
@@ -77,7 +77,6 @@ class AdsManager {
     return hasAdBlock;
   }
 
-  // اختبار 1: إنشاء عنصر إعلان وتفحصه
   async testAdElement() {
     return new Promise(resolve => {
       const adElement = document.createElement('div');
@@ -132,7 +131,6 @@ class AdsManager {
     });
   }
 
-  // اختبار 2: محاولة تحميل سكريبت إعلان
   async testAdScript() {
     return new Promise(resolve => {
       const testScript = document.createElement('script');
@@ -166,7 +164,6 @@ class AdsManager {
     });
   }
 
-  // اختبار 3: محاولة fetch لمسار إعلان
   async testAdFetch() {
     try {
       const response = await fetch('https://google-analytics.com/analytics.js', {
@@ -435,31 +432,24 @@ class AdsManager {
   async loadAllAds() {
     console.log('📦 بدء تحميل جميع الإعلانات...');
     
-    // 1. إعلانات سريعة (فورية)
     this.loadNativeBanner();
     
-    // 2. إعلانات Sidebar
     setTimeout(() => {
       this.loadSidebarAds();
     }, 500);
     
-    // 3. بانرات اللعبة
     await this.delay(1000);
     this.loadBanners();
     
-    // 4. Social Bar
     await this.delay(1500);
     this.loadSocialBar();
     
-    // 5. إعلان وسط الصفحة
     await this.delay(2000);
     this.loadMiddleAd();
     
-    // 6. إعلان إضافي في Sidebar
     await this.delay(2500);
     this.loadExtraSidebarAd();
     
-    // 7. إعلانات تفاعلية (Popunder & Smartlink)
     await this.delay(3000);
     this.loadPopunder();
     this.loadSmartlink();
@@ -469,19 +459,16 @@ class AdsManager {
   async loadBanners() {
     console.log('🖼️ تحميل البانرات...');
     
-    // فوق iframe
     if (this.config.banners?.aboveIframe?.enabled) {
       this.loadBannerAd('ad-above-iframe', this.config.banners.aboveIframe);
     }
     
-    // تحت iframe
     if (this.config.banners?.belowIframe?.enabled) {
       setTimeout(() => {
         this.loadBannerAd('ad-below-iframe', this.config.banners.belowIframe);
       }, 1000);
     }
     
-    // أسفل الصفحة
     if (this.config.banners?.pageBottom?.enabled) {
       setTimeout(() => {
         this.ensureContainerExists('ad-page-bottom');
@@ -500,15 +487,12 @@ class AdsManager {
     const ads = bannerConfig.ads;
     if (!ads || ads.length === 0) return;
     
-    // تحميل أول إعلان
     this.loadSingleAd(container, ads[0], containerId);
     
-    // التدوير
     if (bannerConfig.rotation && ads.length > 1) {
       let currentIndex = 0;
       const interval = bannerConfig.rotationInterval || 30000;
       
-      // إيقاف المؤقت القديم إذا كان موجوداً
       if (this.rotationTimers[containerId]) {
         clearInterval(this.rotationTimers[containerId]);
       }
@@ -521,7 +505,6 @@ class AdsManager {
     }
   }
 
-  // === التصحيح الرئيسي: إصلاح دالة تحميل الإعلان ===
   loadSingleAd(container, ad, containerId) {
     if (!ad || !ad.script) return;
     
@@ -529,7 +512,6 @@ class AdsManager {
     
     const uniqueId = `${ad.id}-${Date.now()}`;
     
-    // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
     window.atOptions = window.atOptions || {};
     Object.assign(window.atOptions, {
         ...ad.config,
@@ -585,7 +567,6 @@ class AdsManager {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
     
-    // التحقق من عدم وجود الإعلان مسبقاً
     if (sidebar.querySelector('#ad-sidebar-extra')) return;
     
     const extraContainer = document.createElement('div');
@@ -599,7 +580,6 @@ class AdsManager {
       position: relative;
     `;
     
-    // إدراج الإعلان بعد الإعلان الحالي
     const existingAd = sidebar.querySelector('#ad-sidebar');
     if (existingAd && existingAd.nextSibling) {
       sidebar.insertBefore(extraContainer, existingAd.nextSibling);
@@ -653,7 +633,6 @@ class AdsManager {
     
     this.loadSidebarAd(container, ads[0]);
     
-    // التدوير
     if (this.config.sidebarAd.rotation && ads.length > 1) {
       let currentIndex = 0;
       const interval = this.config.sidebarAd.rotationInterval || 45000;
@@ -666,11 +645,9 @@ class AdsManager {
     }
   }
 
-  // === التصحيح: دالة تحميل إعلان Sidebar ===
   loadSidebarAd(container, ad) {
     const uniqueId = `${ad.id}-${Date.now()}`;
     
-    // ⚠️ التصحيح: استخدام atOptions ثابت
     window.atOptions = window.atOptions || {};
     Object.assign(window.atOptions, {
         ...ad.config,
@@ -717,7 +694,6 @@ class AdsManager {
     const socialBarScript = this.config.socialBar.script;
     if (!socialBarScript) return;
     
-    // التحقق من عدم تحميل السكريبت مسبقاً
     if (this.loadedScripts.has(socialBarScript)) {
       console.log('⚠️ Social Bar already loaded');
       return;
@@ -737,26 +713,53 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - مُصلح ✅ ===
+  // === 🎯 13. تحميل Popunder - محسّن مع التحكم الكامل ===
   loadPopunder() {
-    if (!this.config.popunder?.enabled) return;
+    if (!this.config.popunder?.enabled) {
+      console.log('⚠️ Popunder معطل في الإعدادات');
+      return;
+    }
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
     
-    // التحقق من عدد المرات المسموح بها
+    // 🔥 التحكم بعدد مرات الظهور
     if (frequency === 'once_per_session') {
-      const currentCount = this.sessionData.popunderCount || 0;
+      const currentCount = this.popunderData.totalCount || 0;
+      const lastShown = this.popunderData.lastShown || 0;
+      const now = Date.now();
       
-      if (currentCount >= maxPerSession) {
-        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
+      // ⏰ التحكم بالتوقيت: لا يظهر إلا بعد مرور 24 ساعة من آخر ظهور
+      const TIME_BETWEEN_POPUNDERS = 24 * 60 * 60 * 1000; // 24 ساعة بالميلي ثانية
+      const timeSinceLastShown = now - lastShown;
+      
+      console.log('📊 معلومات Popunder:');
+      console.log(`   - عدد مرات الظهور الكلي: ${currentCount}`);
+      console.log(`   - آخر ظهور كان منذ: ${Math.floor(timeSinceLastShown / 1000 / 60)} دقيقة`);
+      console.log(`   - الحد الأقصى للجلسة: ${maxPerSession}`);
+      
+      // شرط 1: التحقق من الحد الأقصى للجلسة
+      const sessionCount = this.sessionData.popunderCount || 0;
+      if (sessionCount >= maxPerSession) {
+        console.log(`🚫 تم الوصول للحد الأقصى في هذه الجلسة: ${sessionCount}/${maxPerSession}`);
+        return;
+      }
+      
+      // شرط 2: التحقق من الوقت المنقضي منذ آخر ظهور
+      if (lastShown > 0 && timeSinceLastShown < TIME_BETWEEN_POPUNDERS) {
+        const remainingTime = TIME_BETWEEN_POPUNDERS - timeSinceLastShown;
+        const remainingHours = Math.floor(remainingTime / 1000 / 60 / 60);
+        const remainingMinutes = Math.floor((remainingTime / 1000 / 60) % 60);
+        console.log(`⏰ يجب الانتظار ${remainingHours} ساعة و ${remainingMinutes} دقيقة قبل الظهور مجددًا`);
         return;
       }
     }
     
+    // ✅ السماح بظهور البوب اندر
+    console.log('✅ شروط Popunder متوفرة - سيتم التحميل...');
+    
     setTimeout(() => {
       this.config.popunder.scripts.forEach((scriptUrl, index) => {
-        // التحقق من عدم تحميل السكريبت مسبقاً
         if (this.loadedScripts.has(scriptUrl)) {
           console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
           return;
@@ -774,16 +777,64 @@ class AdsManager {
         console.log(`✅ Popunder script loaded: ${scriptUrl}`);
       });
       
-      // تحديث العداد
+      // تحديث البيانات
       this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
       this.sessionData.popunderShown = true;
       this.saveSessionData();
       
-      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
+      // حفظ بيانات البوب اندر الدائمة
+      this.popunderData.totalCount = (this.popunderData.totalCount || 0) + 1;
+      this.popunderData.lastShown = Date.now();
+      this.savePopunderData();
+      
+      console.log(`📊 تم تحديث البيانات:`);
+      console.log(`   - جلسة حالية: ${this.sessionData.popunderCount}/${this.config.popunder.maxPerSession}`);
+      console.log(`   - إجمالي: ${this.popunderData.totalCount}`);
+      console.log(`   - آخر ظهور: ${new Date(this.popunderData.lastShown).toLocaleString()}`);
+      
     }, this.config.popunder.delay || 8000);
   }
 
-  // === 14. تحميل Smartlink - مُصلح ✅ ===
+  // === 🗄️ إدارة بيانات البوب اندر الدائمة ===
+  getPopunderData() {
+    try {
+      const data = localStorage.getItem('popunderData');
+      return data ? JSON.parse(data) : {
+        totalCount: 0,
+        lastShown: 0,
+        firstShown: 0
+      };
+    } catch (error) {
+      console.error('خطأ في قراءة بيانات البوب اندر:', error);
+      return {
+        totalCount: 0,
+        lastShown: 0,
+        firstShown: 0
+      };
+    }
+  }
+
+  savePopunderData() {
+    try {
+      localStorage.setItem('popunderData', JSON.stringify(this.popunderData));
+      console.log('💾 تم حفظ بيانات البوب اندر:', this.popunderData);
+    } catch (error) {
+      console.error('خطأ في حفظ بيانات البوب اندر:', error);
+    }
+  }
+
+  // دالة لإعادة تعيين بيانات البوب اندر (للاختبار)
+  resetPopunderData() {
+    this.popunderData = {
+      totalCount: 0,
+      lastShown: 0,
+      firstShown: 0
+    };
+    this.savePopunderData();
+    console.log('🔄 تم إعادة تعيين بيانات البوب اندر');
+  }
+
+  // === 14. تحميل Smartlink - مُصلح ===
   loadSmartlink() {
     if (!this.config.smartlink?.enabled) return;
     
@@ -848,7 +899,6 @@ class AdsManager {
           background: transparent;
         `;
         
-        // تحديد مكان الإدراج
         switch(containerId) {
           case 'ad-above-iframe':
           case 'ad-below-iframe':
@@ -914,7 +964,6 @@ class AdsManager {
         background: transparent;
       `;
       
-      // محاولة إيجاد مكان مناسب
       if (containerId.includes('above')) {
         const gameFrame = document.querySelector('.game-frame');
         if (gameFrame && gameFrame.parentNode) {
@@ -1060,7 +1109,14 @@ document.addEventListener('DOMContentLoaded', () => {
   adsManager.init();
   window.adsManager = adsManager;
   
-  // إضافة أنماط CSS محسنة
+  // إضافة أوامر console للتحكم بالبوب اندر
+  window.resetPopunder = () => adsManager.resetPopunderData();
+  window.checkPopunderStatus = () => {
+    console.log('📊 حالة البوب اندر:');
+    console.log('  البيانات الدائمة:', adsManager.popunderData);
+    console.log('  بيانات الجلسة:', adsManager.sessionData);
+  };
+  
   const style = document.createElement('style');
   style.textContent = `
     .ad-banner {
@@ -1142,7 +1198,6 @@ document.addEventListener('DOMContentLoaded', () => {
       pointer-events: auto !important;
     }
     
-    /* تحسين العرض على الأجهزة المحمولة */
     @media (max-width: 768px) {
       .ad-banner {
         padding: 10px;
@@ -1164,4 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.head.appendChild(style);
   
   console.log('🎨 تم تحميل أنماط الإعلانات');
+  console.log('💡 أوامر Console المتاحة:');
+  console.log('   - window.resetPopunder() : إعادة تعيين بيانات البوب اندر');
+  console.log('   - window.checkPopunderStatus() : فحص حالة البوب اندر');
 });
