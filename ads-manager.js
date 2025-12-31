@@ -737,235 +737,51 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - مع التحكم الكامل من JSON ===
-loadPopunder() {
-  if (!this.config.popunder?.enabled) return;
-  
-  console.log('🎯 بدء تحميل Popunder مع الإعدادات المخصصة');
-  
-  // قراءة جميع الإعدادات من JSON
-  const popunderConfig = this.config.popunder;
-  const frequency = popunderConfig.frequency || 'once_per_session';
-  const maxPerSession = popunderConfig.maxPerSession || 1;
-  const maxPerDay = popunderConfig.maxPerDay || 3;
-  const minInterval = popunderConfig.minInterval || 3600000; // ساعة واحدة افتراضياً
-  const requireInteraction = popunderConfig.requireInteraction !== false; // true افتراضياً
-  const waitForUserAction = popunderConfig.waitForUserAction !== false; // true افتراضياً
-  const delay = popunderConfig.delay || 8000;
-  
-  // الحصول على بيانات المستخدم المخزنة
-  const userData = this.getUserPopunderData();
-  const now = Date.now();
-  const today = new Date().toDateString();
-  
-  // === 1. فحص وإعادة تعيين العداد اليومي إذا كان يوم جديد ===
-  if (userData.lastPopunderDate !== today) {
-    userData.popunderCountToday = 0;
-    userData.lastPopunderDate = today;
-    this.saveUserPopunderData(userData);
-    console.log('🔄 يوم جديد - تم إعادة تعيين عداد البوب أندر اليومي');
-  }
-  
-  // === 2. فحص الحد الأقصى للجلسة ===
-  if (frequency === 'once_per_session') {
-    const currentSessionCount = this.sessionData.popunderCount || 0;
+  // === 13. تحميل Popunder - مُصلح ✅ ===
+  loadPopunder() {
+    if (!this.config.popunder?.enabled) return;
     
-    if (currentSessionCount >= maxPerSession) {
-      console.log(`⚠️ تم الوصول للحد الأقصى للجلسة: ${currentSessionCount}/${maxPerSession}`);
-      return;
-    }
-  }
-  
-  // === 3. فحص الحد الأقصى اليومي ===
-  if (userData.popunderCountToday >= maxPerDay) {
-    console.log(`⚠️ تم الوصول للحد الأقصى اليومي: ${userData.popunderCountToday}/${maxPerDay}`);
-    return;
-  }
-  
-  // === 4. فحص الفترة الزمنية بين البوبات ===
-  const timeSinceLastPopup = now - (userData.lastPopunderTime || 0);
-  if (timeSinceLastPopup < minInterval) {
-    const minutesLeft = Math.ceil((minInterval - timeSinceLastPopup) / 60000);
-    console.log(`⚠️ يجب الانتظار ${minutesLeft} دقيقة قبل البوب التالي`);
-    return;
-  }
-  
-  // === 5. حساب التأخير الذكي ===
-  const smartDelay = waitForUserAction ? Math.max(delay, 10000) : delay;
-  
-  // === 6. معالجة تفاعل المستخدم (إذا مطلوب) ===
-  let userInteracted = !requireInteraction; // إذا لا يتطلب تفاعلاً، اعتبره متفاعلاً
-  
-  if (requireInteraction) {
-    console.log('👀 في انتظار تفاعل المستخدم...');
+    const frequency = this.config.popunder.frequency;
+    const maxPerSession = this.config.popunder.maxPerSession || 1;
     
-    const interactionHandler = () => {
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('✅ المستخدم تفاعل - يمكن عرض البوب أندر');
-        
-        // إزالة جميع معالجات الأحداث
-        ['click', 'scroll', 'mousemove', 'keydown', 'touchstart'].forEach(event => {
-          document.removeEventListener(event, interactionHandler);
-        });
-      }
-    };
-    
-    // إضافة معالجات الأحداث للكشف عن تفاعل المستخدم
-    ['click', 'scroll', 'mousemove', 'keydown', 'touchstart'].forEach(event => {
-      document.addEventListener(event, interactionHandler, { 
-        once: true, 
-        passive: true 
-      });
-    });
-    
-    // مهلة انتظار تفاعل المستخدم (30 ثانية كحد أقصى)
-    setTimeout(() => {
-      if (!userInteracted) {
-        console.log('⏰ انتهت مهلة انتظار تفاعل المستخدم');
-        ['click', 'scroll', 'mousemove', 'keydown', 'touchstart'].forEach(event => {
-          document.removeEventListener(event, interactionHandler);
-        });
-      }
-    }, 30000);
-  }
-  
-  // === 7. جدولة تحميل البوب أندر ===
-  console.log(`⏰ جدولة البوب أندر بعد ${smartDelay/1000} ثانية`);
-  
-  const popunderTimeout = setTimeout(() => {
-    // التحقق النهائي قبل التحميل
-    if (requireInteraction && !userInteracted) {
-      console.log('❌ تم إلغاء البوب أندر - المستخدم لم يتفاعل');
-      return;
-    }
-    
-    // تحديث بيانات المستخدم أولاً
-    userData.lastPopunderTime = Date.now();
-    userData.popunderCountToday = (userData.popunderCountToday || 0) + 1;
-    userData.totalPopunderCount = (userData.totalPopunderCount || 0) + 1;
-    this.saveUserPopunderData(userData);
-    
-    // تحديث بيانات الجلسة
-    this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
-    this.sessionData.popunderShown = true;
-    this.saveSessionData();
-    
-    console.log(`📊 إحصائيات البوب أندر - اليوم: ${userData.popunderCountToday}/${maxPerDay}, الإجمالي: ${userData.totalPopunderCount}`);
-    
-    // === 8. تحميل سكريبتات البوب أندر ===
-    let scriptsLoaded = 0;
-    const totalScripts = popunderConfig.scripts?.length || 0;
-    
-    if (totalScripts === 0) {
-      console.warn('⚠️ لا توجد سكريبتات للبوب أندر في الإعدادات');
-      return;
-    }
-    
-    popunderConfig.scripts.forEach((scriptUrl, index) => {
-      // التحقق من عدم تحميل السكريبت مسبقاً
-      if (this.loadedScripts.has(scriptUrl)) {
-        console.log(`⚠️ سكريبت البوب أندر محمل مسبقاً: ${scriptUrl}`);
-        scriptsLoaded++;
+    // التحقق من عدد المرات المسموح بها
+    if (frequency === 'once_per_session') {
+      const currentCount = this.sessionData.popunderCount || 0;
+      
+      if (currentCount >= maxPerSession) {
+        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
         return;
       }
-      
-      const script = document.createElement('script');
-      script.src = scriptUrl;
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.id = `popunder-script-${Date.now()}-${index}`;
-      
-      script.onload = () => {
-        scriptsLoaded++;
-        console.log(`✅ تم تحميل سكريبت البوب أندر (${scriptsLoaded}/${totalScripts}): ${scriptUrl}`);
-        
-        if (scriptsLoaded === totalScripts) {
-          console.log('🎉 تم تحميل جميع سكريبتات البوب أندر بنجاح');
-        }
-      };
-      
-      script.onerror = () => {
-        scriptsLoaded++;
-        console.warn(`❌ فشل تحميل سكريبت البوب أندر (${scriptsLoaded}/${totalScripts}): ${scriptUrl}`);
-      };
-      
-      document.body.appendChild(script);
-      this.loadedScripts.add(scriptUrl);
-    });
-    
-  }, smartDelay);
-  
-  // === 9. تنظيف المؤقت إذا غادر المستخدم الصفحة ===
-  window.addEventListener('beforeunload', () => {
-    clearTimeout(popunderTimeout);
-    console.log('🧹 تنظيف مؤقت البوب أندر بسبب مغادرة الصفحة');
-  });
-}
-
-// === دالة جديدة: الحصول على بيانات البوب أندر للمستخدم ===
-getUserPopunderData() {
-  try {
-    const data = localStorage.getItem('userPopunderData');
-    if (data) {
-      const parsedData = JSON.parse(data);
-      
-      // التحقق من صحة البيانات
-      if (!parsedData.lastPopunderDate) {
-        parsedData.lastPopunderDate = '';
-      }
-      if (typeof parsedData.popunderCountToday !== 'number') {
-        parsedData.popunderCountToday = 0;
-      }
-      if (typeof parsedData.totalPopunderCount !== 'number') {
-        parsedData.totalPopunderCount = 0;
-      }
-      if (typeof parsedData.lastPopunderTime !== 'number') {
-        parsedData.lastPopunderTime = 0;
-      }
-      
-      return parsedData;
     }
-  } catch (error) {
-    console.error('خطأ في قراءة بيانات البوب أندر:', error);
+    
+    setTimeout(() => {
+      this.config.popunder.scripts.forEach((scriptUrl, index) => {
+        // التحقق من عدم تحميل السكريبت مسبقاً
+        if (this.loadedScripts.has(scriptUrl)) {
+          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `popunder-script-${index}`;
+        
+        document.body.appendChild(script);
+        this.loadedScripts.add(scriptUrl);
+        
+        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
+      });
+      
+      // تحديث العداد
+      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
+      this.sessionData.popunderShown = true;
+      this.saveSessionData();
+      
+      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
+    }, this.config.popunder.delay || 8000);
   }
-  
-  // البيانات الافتراضية
-  return {
-    lastPopunderTime: 0,
-    lastPopunderDate: '',
-    popunderCountToday: 0,
-    totalPopunderCount: 0,
-    firstVisit: Date.now()
-  };
-}
-
-// === دالة جديدة: حفظ بيانات البوب أندر للمستخدم ===
-saveUserPopunderData(data) {
-  try {
-    localStorage.setItem('userPopunderData', JSON.stringify(data));
-    console.log('💾 تم حفظ بيانات البوب أندر للمستخدم:', {
-      popunderCountToday: data.popunderCountToday,
-      lastPopunderDate: data.lastPopunderDate,
-      totalPopunderCount: data.totalPopunderCount
-    });
-  } catch (error) {
-    console.error('خطأ في حفظ بيانات البوب أندر:', error);
-  }
-}
-
-// === دالة جديدة: إعادة تعيين العداد اليومي ===
-resetDailyPopunderCount() {
-  const userData = this.getUserPopunderData();
-  const today = new Date().toDateString();
-  
-  if (userData.lastPopunderDate !== today) {
-    userData.popunderCountToday = 0;
-    userData.lastPopunderDate = today;
-    this.saveUserPopunderData(userData);
-    console.log('🔄 تم إعادة تعيين العداد اليومي للبوب أندر');
-  }
-}
 
   // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
