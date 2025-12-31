@@ -1051,39 +1051,29 @@ class AdsManager {
     console.log('🧹 تم تنظيف موارد الإعلانات');
   }
 }
-// 🧠 Popunder REAL FIX (Allow once, block repeats)
+// ✅ Popunder SAFE CONTROL (Allow first, block rest)
 (function () {
-  let popAllowed = true;
+  const originalOpen = window.open;
+  let firstPopDone = false;
 
-  // السماح لأول تفاعل فقط
-  document.addEventListener('click', function handler(e) {
-    if (!popAllowed) {
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      return false;
+  window.open = function (...args) {
+    // السماح لأول popunder فقط
+    if (!firstPopDone) {
+      const win = originalOpen.apply(window, args);
+
+      // إذا فتح فعليًا (لم يُمنع من المتصفح)
+      if (win) {
+        firstPopDone = true;
+        console.log('✅ First popunder allowed');
+      }
+
+      return win;
     }
 
-    // بعد أول click → امنع أي pop إضافي
-    popAllowed = false;
-
-    // إزالة كل listeners بعد أول مرة
-    setTimeout(() => {
-      document.removeEventListener('click', handler, true);
-    }, 0);
-
-  }, true);
-
-  // حماية إضافية ضد focus / mouse
-  ['mousedown', 'mouseup', 'touchstart', 'focus'].forEach(evt => {
-    document.addEventListener(evt, function (e) {
-      if (!popAllowed) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        return false;
-      }
-    }, true);
-  });
-
+    // ⛔ منع أي popunder إضافي داخل نفس الصفحة
+    console.log('⛔ Extra popunder blocked');
+    return null;
+  };
 })();
 
 // === تشغيل تلقائي ===
