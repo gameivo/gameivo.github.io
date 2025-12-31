@@ -739,7 +739,7 @@ class AdsManager {
 
   // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
-  if (window.__BLOCK_POPUNDER__) return;
+    if (!this.config.popunder?.enabled) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
@@ -1052,35 +1052,33 @@ class AdsManager {
   }
 }
 
-// 🔒 Popunder Hard Lock (NO repeat inside same page)
+// 🔒 HARD POPUNDER KILL SWITCH (REAL FIX)
 (function () {
-  const POP_KEY = 'POPUNDER_LOCK';
-  const POP_TIME_KEY = 'POPUNDER_TIME';
+  let popOpened = false;
+  const originalOpen = window.open;
 
-  const NOW = Date.now();
-  const COOLDOWN = 0; // 0 = لا يعيد الظهور إلا بعد refresh
+  window.open = function (...args) {
+    if (popOpened) {
+      console.log('⛔ Popunder blocked (window.open locked)');
+      return null;
+    }
 
-  const lastTime = sessionStorage.getItem(POP_TIME_KEY);
-  const isLocked = sessionStorage.getItem(POP_KEY);
+    popOpened = true;
 
-  // ⛔ إذا سبق ظهوره داخل الصفحة → امنعه
-  if (isLocked) {
-    console.log('⛔ Popunder blocked (already shown on this page)');
-    window.__BLOCK_POPUNDER__ = true;
-    return;
-  }
+    // 🔐 بعد أول pop، اقفل نهائيًا داخل الصفحة
+    setTimeout(() => {
+      popOpened = true;
+    }, 0);
 
-  // ⛔ لو أردت تحكم زمني
-  if (lastTime && NOW - lastTime < COOLDOWN) {
-    console.log('⛔ Popunder blocked (cooldown)');
-    window.__BLOCK_POPUNDER__ = true;
-    return;
-  }
+    return originalOpen.apply(window, args);
+  };
 
-  // ✅ السماح مرة واحدة فقط
-  sessionStorage.setItem(POP_KEY, '1');
-  sessionStorage.setItem(POP_TIME_KEY, NOW.toString());
-  window.__BLOCK_POPUNDER__ = false;
+  // حماية إضافية ضد pop من iframe / focus
+  document.addEventListener('click', () => {
+    if (popOpened) return;
+    popOpened = true;
+  }, { once: true });
+
 })();
 
 // === تشغيل تلقائي ===
