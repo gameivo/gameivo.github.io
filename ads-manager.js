@@ -5,6 +5,36 @@
  * ✅ إضافة جميع الإعلانات الجديدة
  * ✅ الحفاظ على نظام Anti-AdBlock
  */
+// 🔐 GLOBAL POPUNDER SESSION LOCK (FINAL FIX)
+(function () {
+  const KEY = '__POPUNDER_SESSION_LOCK__';
+
+  // إذا سبق فتح popunder في هذه الجلسة → اقفله نهائيًا
+  if (sessionStorage.getItem(KEY)) {
+    window.__POPUNDER_ALLOWED__ = false;
+  } else {
+    window.__POPUNDER_ALLOWED__ = true;
+  }
+
+  // راقب أول popunder ناجح فقط
+  const originalOpen = window.open;
+  window.open = function (...args) {
+    if (!window.__POPUNDER_ALLOWED__) {
+      console.log('⛔ Popunder blocked (session locked)');
+      return null;
+    }
+
+    const win = originalOpen.apply(window, args);
+
+    if (win) {
+      sessionStorage.setItem(KEY, '1');
+      window.__POPUNDER_ALLOWED__ = false;
+      console.log('✅ Popunder locked for session');
+    }
+
+    return win;
+  };
+})();
 
 class AdsManager {
   constructor() {
@@ -739,7 +769,7 @@ class AdsManager {
 
   // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
-    if (!this.config.popunder?.enabled) return;
+  if (sessionStorage.getItem('__POPUNDER_SESSION_LOCK__')) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
@@ -1051,30 +1081,6 @@ class AdsManager {
     console.log('🧹 تم تنظيف موارد الإعلانات');
   }
 }
-// ✅ Popunder SAFE CONTROL (Allow first, block rest)
-(function () {
-  const originalOpen = window.open;
-  let firstPopDone = false;
-
-  window.open = function (...args) {
-    // السماح لأول popunder فقط
-    if (!firstPopDone) {
-      const win = originalOpen.apply(window, args);
-
-      // إذا فتح فعليًا (لم يُمنع من المتصفح)
-      if (win) {
-        firstPopDone = true;
-        console.log('✅ First popunder allowed');
-      }
-
-      return win;
-    }
-
-    // ⛔ منع أي popunder إضافي داخل نفس الصفحة
-    console.log('⛔ Extra popunder blocked');
-    return null;
-  };
-})();
 
 // === تشغيل تلقائي ===
 document.addEventListener('DOMContentLoaded', () => {
