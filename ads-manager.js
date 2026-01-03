@@ -5,6 +5,37 @@
  * ✅ إضافة جميع الإعلانات الجديدة
  * ✅ الحفاظ على نظام Anti-AdBlock
  */
+// 🔐 GLOBAL POPUNDER SESSION LOCK (FINAL FIX)
+(function () {
+  const KEY = '__POPUNDER_SESSION_LOCK__';
+
+  // إذا سبق فتح popunder في هذه الجلسة → اقفله نهائيًا
+  if (sessionStorage.getItem(KEY)) {
+    window.__POPUNDER_ALLOWED__ = false;
+  } else {
+    window.__POPUNDER_ALLOWED__ = true;
+  }
+
+  // راقب أول popunder ناجح فقط
+  const originalOpen = window.open;
+  window.open = function (...args) {
+    if (!window.__POPUNDER_ALLOWED__) {
+      console.log('⛔ Popunder blocked (session locked)');
+      return null;
+    }
+
+    const win = originalOpen.apply(window, args);
+
+    if (win) {
+      sessionStorage.setItem(KEY, '1');
+      window.__POPUNDER_ALLOWED__ = false;
+      console.log('✅ Popunder locked for session');
+    }
+
+    return win;
+  };
+})();
+
 
 class AdsManager {
   constructor() {
@@ -737,102 +768,53 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - النسخة المحسنة والمضمونة ===
-loadPopunder() {
-  if (!this.config.popunder?.enabled) return;
-  
-  console.log('🔍 بدء تحميل Popunder...', {
-    sessionData: this.sessionData,
-    config: this.config.popunder
-  });
-  
-  // === التحقق القوي والمتعدد ===
-  const frequency = this.config.popunder.frequency;
-  const maxPerSession = this.config.popunder.maxPerSession || 1;
-  
-  // 1. التحقق من وجود الجلسة
-  if (!this.sessionData || typeof this.sessionData !== 'object') {
-    console.error('❌ بيانات الجلسة غير صالحة، إعادة التهيئة');
-    this.sessionData = this.getSessionData();
-  }
-  
-  // 2. التحقق الأساسي - هل تم عرض البوب أندر مسبقاً؟
-  if (this.sessionData.popunderShown === true) {
-    console.log('⛔ Popunder already shown - BLOCKING');
-    return;
-  }
-  
-  // 3. التحقق من التكرار (إذا كان مرة واحدة لكل جلسة)
-  if (frequency === 'once_per_session') {
-    const currentCount = this.sessionData.popunderCount || 0;
+  // === 13. تحميل Popunder - مُصلح ✅ ===
+ loadPopunder() {
+  if (sessionStorage.getItem('__POPUNDER_SESSION_LOCK__')) return;
+
     
-    if (currentCount >= maxPerSession) {
-      console.log(`⛔ Popunder limit reached: ${currentCount}/${maxPerSession}`);
+    const frequency = this.config.popunder.frequency;
+    const maxPerSession = this.config.popunder.maxPerSession || 1;
+    
+    // التحقق من عدد المرات المسموح بها
+    if (frequency === 'once_per_session') {
+      const currentCount = this.sessionData.popunderCount || 0;
+      
+      if (currentCount >= maxPerSession) {
+        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
+        return;
+      }
+    }
+    
+    setTimeout(() => {
+      this.config.popunder.scripts.forEach((scriptUrl, index) => {
+        // التحقق من عدم تحميل السكريبت مسبقاً
+        if (this.loadedScripts.has(scriptUrl)) {
+          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `popunder-script-${index}`;
+        
+        document.body.appendChild(script);
+        this.loadedScripts.add(scriptUrl);
+        
+        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
+      });
+      
+      // تحديث العداد
+      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
       this.sessionData.popunderShown = true;
       this.saveSessionData();
-      return;
-    }
+      
+      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
+    }, this.config.popunder.delay || 8000);
   }
-  
-  // 4. تأخير التنفيذ كما في الإعدادات
-  const delay = this.config.popunder.delay || 8000;
-  
-  setTimeout(() => {
-    console.log('🕒 وقت عرض Popunder...');
-    
-    // تنفيذ البوب أندر
-    this.executePopunder();
-    
-    // تحديث حالة الجلسة فوراً
-    this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
-    this.sessionData.popunderShown = true;
-    this.saveSessionData();
-    
-    console.log('✅ تم عرض Popunder وتحديث الحالة:', {
-      popunderCount: this.sessionData.popunderCount,
-      popunderShown: this.sessionData.popunderShown
-    });
-    
-  }, delay);
-}
 
-// === دالة منفصلة لتنفيذ البوب أندر ===
-executePopunder() {
-  if (!this.config.popunder?.scripts || !Array.isArray(this.config.popunder.scripts)) {
-    console.error('❌ لا توجد سكريبتات Popunder');
-    return;
-  }
-  
-  this.config.popunder.scripts.forEach((scriptUrl, index) => {
-    // التحقق من عدم تحميل السكريبت مسبقاً
-    if (this.loadedScripts.has(scriptUrl)) {
-      console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
-      return;
-    }
-    
-    console.log(`📢 تحميل سكريبت Popunder: ${scriptUrl}`);
-    
-    // إنشاء وتحميل السكريبت
-    const script = document.createElement('script');
-    script.src = scriptUrl;
-    script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-    script.id = `popunder-script-${Date.now()}-${index}`;
-    
-    // معالج الأحداث
-    script.onload = () => {
-      console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-      this.loadedScripts.add(scriptUrl);
-    };
-    
-    script.onerror = () => {
-      console.warn(`⚠️ فشل تحميل Popunder script: ${scriptUrl}`);
-    };
-    
-    // إضافة السكريبت إلى الصفحة
-    document.body.appendChild(script);
-  });
-}
   // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
     if (!this.config.smartlink?.enabled) return;
@@ -1044,51 +1026,26 @@ executePopunder() {
 
   // === 19. إدارة الجلسة ===
   getSessionData() {
-  try {
-    const data = sessionStorage.getItem('adsSessionData');
-    
-    if (!data) {
-      console.log('🆕 إنشاء بيانات جلسة جديدة');
-      return this.createNewSessionData();
+    try {
+      const data = sessionStorage.getItem('adsSessionData');
+      return data ? JSON.parse(data) : {
+        popunderShown: false,
+        popunderCount: 0,
+        smartlinkOpened: false,
+        adsLoaded: 0,
+        sessionId: Date.now()
+      };
+    } catch (error) {
+      console.error('خطأ في قراءة بيانات الجلسة:', error);
+      return {
+        popunderShown: false,
+        popunderCount: 0,
+        smartlinkOpened: false,
+        adsLoaded: 0,
+        sessionId: Date.now()
+      };
     }
-    
-    const parsedData = JSON.parse(data);
-    
-    // التحقق من صحة البيانات
-    if (!parsedData || typeof parsedData !== 'object') {
-      console.warn('⚠️ بيانات الجلسة تالفة، إنشاء جديدة');
-      return this.createNewSessionData();
-    }
-    
-    // تأكد من وجود جميع الخصائص المطلوبة
-    return {
-      popunderShown: !!parsedData.popunderShown, // ⬅️ مهم: تحويل إلى boolean
-      popunderCount: Number(parsedData.popunderCount) || 0,
-      smartlinkOpened: !!parsedData.smartlinkOpened,
-      adsLoaded: Number(parsedData.adsLoaded) || 0,
-      sessionId: parsedData.sessionId || Date.now(),
-      sessionStart: parsedData.sessionStart || Date.now(),
-      lastPopunder: parsedData.lastPopunder || 0
-    };
-    
-  } catch (error) {
-    console.error('❌ خطأ في قراءة بيانات الجلسة:', error);
-    return this.createNewSessionData();
   }
-}
-
-// دالة مساعدة لإنشاء بيانات جلسة جديدة
-createNewSessionData() {
-  return {
-    popunderShown: false,
-    popunderCount: 0,
-    smartlinkOpened: false,
-    adsLoaded: 0,
-    sessionId: Date.now(),
-    sessionStart: Date.now(),
-    lastPopunder: 0
-  };
-}
 
   saveSessionData() {
     try {
