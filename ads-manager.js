@@ -5,37 +5,166 @@
  * ✅ إضافة جميع الإعلانات الجديدة
  * ✅ الحفاظ على نظام Anti-AdBlock
  */
-// 🔐 GLOBAL POPUNDER SESSION LOCK (FINAL FIX)
-(function () {
-  const KEY = '__POPUNDER_SESSION_LOCK__';
 
-  // إذا سبق فتح popunder في هذه الجلسة → اقفله نهائيًا
-  if (sessionStorage.getItem(KEY)) {
-    window.__POPUNDER_ALLOWED__ = false;
-  } else {
-    window.__POPUNDER_ALLOWED__ = true;
-  }
+// إضافة هذه الدوال في بداية السكريبت
 
-  // راقب أول popunder ناجح فقط
-  const originalOpen = window.open;
-  window.open = function (...args) {
-    if (!window.__POPUNDER_ALLOWED__) {
-      console.log('⛔ Popunder blocked (session locked)');
-      return null;
+// دالة للتحقق من آخر مرة ظهر فيها البوب أندر
+function canShowPopunder() {
+    const lastShown = localStorage.getItem('popunderLastShown');
+    const popunderInterval = parseInt(localStorage.getItem('popunderInterval') || '0'); // بالدقائق
+    
+    if (!lastShown) {
+        return true; // لم يظهر من قبل
     }
-
-    const win = originalOpen.apply(window, args);
-
-    if (win) {
-      sessionStorage.setItem(KEY, '1');
-      window.__POPUNDER_ALLOWED__ = false;
-      console.log('✅ Popunder locked for session');
+    
+    if (popunderInterval === 0) {
+        return false; // يظهر مرة واحدة فقط
     }
+    
+    const now = new Date().getTime();
+    const lastShownTime = parseInt(lastShown);
+    const minutesPassed = (now - lastShownTime) / (1000 * 60);
+    
+    return minutesPassed >= popunderInterval;
+}
 
-    return win;
-  };
-})();
+// دالة لحفظ وقت آخر ظهور للبوب أندر
+function markPopunderShown() {
+    localStorage.setItem('popunderLastShown', new Date().getTime().toString());
+}
 
+// دالة لتعيين الفترة الزمنية بين ظهور البوب أندر
+function setPopunderInterval(minutes) {
+    // minutes = 0 يعني مرة واحدة فقط
+    // minutes > 0 يعني يظهر كل X دقيقة
+    localStorage.setItem('popunderInterval', minutes.toString());
+}
+
+// ====== تعديل كود البوب أندر الموجود ======
+
+// ابحث عن الكود الخاص بالبوب أندر واستبدله بهذا:
+
+function showPopunder() {
+    // التحقق من إمكانية عرض البوب أندر
+    if (!canShowPopunder()) {
+        console.log('البوب أندر لن يظهر - لم يمر الوقت الكافي');
+        return;
+    }
+    
+    // الكود الأصلي للبوب أندر هنا
+    // مثال:
+    const popunderUrl = 'رابط-البوب-أندر-هنا';
+    
+    try {
+        // فتح البوب أندر
+        const popunder = window.open(popunderUrl, '_blank');
+        
+        if (popunder) {
+            // إعادة التركيز على النافذة الحالية
+            window.focus();
+            
+            // حفظ وقت الظهور
+            markPopunderShown();
+            console.log('تم عرض البوب أندر بنجاح');
+        }
+    } catch (e) {
+        console.error('خطأ في عرض البوب أندر:', e);
+    }
+}
+
+// ====== في بداية السكريبت، عند تحميل الصفحة ======
+
+// تعيين الإعدادات (ضع هذا في بداية الكود)
+// الخيارات:
+// setPopunderInterval(0);  // مرة واحدة فقط للزائر
+// setPopunderInterval(15); // كل 15 دقيقة
+// setPopunderInterval(30); // كل 30 دقيقة
+// setPopunderInterval(60); // كل ساعة
+
+setPopunderInterval(15); // مثال: كل 15 دقيقة
+
+// ====== تعديل كود rotation الإعلانات ======
+
+// في الدالة التي تقوم بتحديث الإعلانات (rotation)
+// استبدل أي استدعاء للبوب أندر بهذا:
+
+function rotateBanners() {
+    // كود تحديث الإعلانات الموجود...
+    
+    // بدلاً من استدعاء البوب أندر مباشرة، استخدم:
+    // showPopunder(); // فقط عند الحاجة وليس في كل rotation
+    
+    // أو لا تستدعيه أبداً في rotation
+    // واتركه فقط يظهر عند أول تحميل للصفحة
+}
+
+// ====== استدعاء البوب أندر فقط عند تحميل الصفحة ======
+
+document.addEventListener('DOMContentLoaded', function() {
+    // عرض البوب أندر عند تحميل الصفحة فقط
+    showPopunder();
+});
+
+// أو إذا كنت تستخدم window.onload
+window.addEventListener('load', function() {
+    showPopunder();
+});
+
+// ====== دوال إضافية للتحكم (اختيارية) ======
+
+// إعادة تعيين - لإزالة السجل والسماح بالظهور مباشرة
+function resetPopunder() {
+    localStorage.removeItem('popunderLastShown');
+    console.log('تم إعادة تعيين البوب أندر');
+}
+
+// التحقق من الوقت المتبقي
+function getTimeUntilNextPopunder() {
+    const lastShown = localStorage.getItem('popunderLastShown');
+    const interval = parseInt(localStorage.getItem('popunderInterval') || '0');
+    
+    if (!lastShown || interval === 0) {
+        return 0;
+    }
+    
+    const now = new Date().getTime();
+    const lastShownTime = parseInt(lastShown);
+    const minutesPassed = (now - lastShownTime) / (1000 * 60);
+    const minutesRemaining = Math.max(0, interval - minutesPassed);
+    
+    return Math.ceil(minutesRemaining);
+}
+
+// عرض معلومات التصحيح
+function debugPopunder() {
+    console.log('=== معلومات البوب أندر ===');
+    console.log('الفترة الزمنية المحددة:', localStorage.getItem('popunderInterval'), 'دقيقة');
+    console.log('آخر ظهور:', new Date(parseInt(localStorage.getItem('popunderLastShown') || '0')));
+    console.log('الوقت المتبقي:', getTimeUntilNextPopunder(), 'دقيقة');
+    console.log('يمكن العرض الآن:', canShowPopunder());
+}
+
+// ====== ملاحظات الاستخدام ======
+
+/*
+1. تأكد من إزالة أي استدعاء للبوب أندر من داخل دالة rotation الإعلانات
+
+2. للتحكم في توقيت الظهور:
+   - setPopunderInterval(0);  → مرة واحدة فقط
+   - setPopunderInterval(15); → كل 15 دقيقة
+   - setPopunderInterval(30); → كل 30 دقيقة
+   - setPopunderInterval(60); → كل ساعة
+
+3. للاختبار:
+   - افتح Console في المتصفح
+   - اكتب: debugPopunder() لرؤية المعلومات
+   - اكتب: resetPopunder() لإعادة التعيين
+
+4. الكود يحفظ البيانات في localStorage مما يعني:
+   - يبقى حتى لو أغلق المستخدم المتصفح
+   - يعمل على نفس النطاق (domain) فقط
+   - لن يتأثر بتحديث الصفحة (refresh)
+*/
 class AdsManager {
   constructor() {
     this.config = null;
@@ -769,7 +898,7 @@ class AdsManager {
 
   // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
-  if (sessionStorage.getItem('__POPUNDER_SESSION_LOCK__')) return;
+    if (!this.config.popunder?.enabled) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
