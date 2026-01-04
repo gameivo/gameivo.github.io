@@ -7,7 +7,7 @@
   },
   
   "popunder": {
-    "enabled": true,
+    "enabled": false,
     "frequency": "once_per_session",
     "maxPerSession": 1,
     "delay": 8000,
@@ -261,10 +261,11 @@
   },
   
   "smartlink": {
-    "enabled": true,
-    "url": "https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4",
-    "frequency": "once_per_session",
-    "openInNewTab": true,
-    "delay": 3000
-  }
+  "enabled": true,
+  "url": "https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4",
+  "mode": "popunder",
+  "triggerOnClick": true,
+  "minIntervalBetweenShows": 300000,
+  "maxShowsPerSession": 3
+ }
 }
