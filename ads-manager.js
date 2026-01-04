@@ -1,5 +1,5 @@
 /**
- * 🎯 نظام إدارة الإعلانات الذكية - النسخة المحسّنة والمُصلحة
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
  * ✅ إصلاح البانرات السوداء
  * ✅ إصلاح Popunder للعمل مرة واحدة فقط
  * ✅ إضافة جميع الإعلانات الجديدة
@@ -737,62 +737,28 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-// === 13. تحميل Popunder - إصلاح نهائي 🔥 ===
+  // === 13. تحميل Popunder - مُصلح ✅ ===
   loadPopunder() {
-    if (!this.config.popunder?.enabled) {
-      console.log('⚠️ Popunder disabled in config');
-      return;
-    }
+    if (!this.config.popunder?.enabled) return;
     
     const frequency = this.config.popunder.frequency;
     const maxPerSession = this.config.popunder.maxPerSession || 1;
     
-    // 🔒 فحص قوي: هل تم تنفيذ Popunder من قبل؟
-    if (this.popunderExecuted) {
-      console.log('🚫 Popunder already executed in this instance');
-      return;
-    }
-    
-    // التحقق من الجلسة
+    // التحقق من عدد المرات المسموح بها
     if (frequency === 'once_per_session') {
       const currentCount = this.sessionData.popunderCount || 0;
       
       if (currentCount >= maxPerSession) {
-        console.log(`🚫 Popunder limit reached: ${currentCount}/${maxPerSession}`);
-        return;
-      }
-      
-      if (this.sessionData.popunderShown) {
-        console.log('🚫 Popunder already shown in this session');
+        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
         return;
       }
     }
     
-    // 🔥 منع إضافة المستمع أكثر من مرة
-    if (this.clickHandlerAdded) {
-      console.log('⚠️ Click handler already added');
-      return;
-    }
-    
-    this.clickHandlerAdded = true;
-    
-    // دالة تنفيذ Popunder
-    const triggerPopunder = (event) => {
-      // 🔒 فحص مضاعف للتأكد من عدم التكرار
-      if (this.popunderExecuted) {
-        console.log('🚫 Popunder already executed - Ignoring click');
-        return;
-      }
-      
-      // وضع علامة فورية لمنع التنفيذ المتعدد
-      this.popunderExecuted = true;
-      
-      console.log('🎯 First click detected - Triggering Popunder...');
-      
-      // تحميل السكريبتات
+    setTimeout(() => {
       this.config.popunder.scripts.forEach((scriptUrl, index) => {
+        // التحقق من عدم تحميل السكريبت مسبقاً
         if (this.loadedScripts.has(scriptUrl)) {
-          console.log(`⚠️ Script already loaded: ${scriptUrl}`);
+          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
           return;
         }
         
@@ -800,104 +766,167 @@ class AdsManager {
         script.src = scriptUrl;
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
-        script.id = `popunder-script-${index}-${Date.now()}`;
-        
-        script.onload = () => {
-          console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-        };
-        
-        script.onerror = () => {
-          console.error(`❌ Failed to load: ${scriptUrl}`);
-        };
+        script.id = `popunder-script-${index}`;
         
         document.body.appendChild(script);
         this.loadedScripts.add(scriptUrl);
+        
+        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
       });
       
-      // تحديث بيانات الجلسة
+      // تحديث العداد
       this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
       this.sessionData.popunderShown = true;
-      this.sessionData.lastPopunderTime = Date.now();
       this.saveSessionData();
       
-      console.log(`✅ Popunder triggered: ${this.sessionData.popunderCount}/${maxPerSession}`);
-      
-      // إزالة جميع المستمعات فوراً
-      document.removeEventListener('click', triggerPopunder, true);
-      document.removeEventListener('touchstart', triggerPopunder, true);
-      document.removeEventListener('mousedown', triggerPopunder, true);
-      
-      console.log('🔒 All popunder listeners removed');
-    };
-    
-    // إضافة المستمعات مع useCapture=true لاصطياد الحدث مبكراً
-    document.addEventListener('click', triggerPopunder, { capture: true, once: true });
-    document.addEventListener('touchstart', triggerPopunder, { capture: true, once: true });
-    
-    console.log('👆 Popunder armed - Waiting for first user interaction...');
-    
-    // حماية إضافية: حظر window.open المتعددة
-    this.protectAgainstMultiplePopunders();
+      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
+    }, this.config.popunder.delay || 8000);
+  }
+
+ // === 14. تحميل Smartlink Popunder - مُحسّن ✅ ===
+loadSmartlink() {
+  if (!this.config.smartlink?.enabled) return;
+  
+  const mode = this.config.smartlink.mode || 'direct';
+  
+  if (mode === 'popunder' && this.config.smartlink.triggerOnClick) {
+    console.log('🎯 تفعيل Smartlink Popunder بالنقر...');
+    this.setupSmartlinkPopunder();
+  } else {
+    // الطريقة القديمة (فتح مباشر)
+    this.openSmartlinkDirect();
+  }
+}
+
+// دالة جديدة: إعداد Popunder بالنقر
+setupSmartlinkPopunder() {
+  const minInterval = this.config.smartlink.minIntervalBetweenShows || 300000; // 5 دقائق
+  const maxShows = this.config.smartlink.maxShowsPerSession || 3;
+  
+  // التحقق من عدد المرات المسموح بها
+  if (this.sessionData.smartlinkCount >= maxShows) {
+    console.log(`⚠️ تم الوصول للحد الأقصى: ${this.sessionData.smartlinkCount}/${maxShows}`);
+    return;
   }
   
-  // === حماية ضد فتح نوافذ متعددة ===
-  protectAgainstMultiplePopunders() {
-    const originalWindowOpen = window.open;
-    let popunderOpenCount = 0;
-    const maxPopunderWindows = 1;
-    
-    window.open = function(...args) {
-      // السماح بفتح نافذة واحدة فقط من Popunder
-      if (popunderOpenCount >= maxPopunderWindows) {
-        console.log('🚫 Blocked additional popunder window');
-        return null;
-      }
+  // التحقق من آخر مرة ظهر فيها
+  const lastShown = this.sessionData.lastSmartlinkShown;
+  if (lastShown) {
+    const timePassed = Date.now() - lastShown;
+    if (timePassed < minInterval) {
+      const timeLeft = minInterval - timePassed;
+      console.log(`⏰ يجب الانتظار ${Math.ceil(timeLeft / 1000)} ثانية قبل الظهور مرة أخرى`);
       
-      popunderOpenCount++;
-      console.log(`📊 Popunder window opened: ${popunderOpenCount}/${maxPopunderWindows}`);
-      
-      return originalWindowOpen.apply(this, args);
-    };
+      // جدولة الظهور التالي
+      setTimeout(() => {
+        this.setupSmartlinkPopunder();
+      }, timeLeft);
+      return;
+    }
   }
-  // === 14. تحميل Smartlink - مُصلح ✅ ===
-  loadSmartlink() {
-    if (!this.config.smartlink?.enabled) return;
-    
-    const frequency = this.config.smartlink.frequency;
-    if (frequency === 'once_per_session' && this.sessionData.smartlinkOpened) {
-      console.log('⚠️ Smartlink already opened in this session');
+  
+  // إضافة مستمع النقر على الصفحة بأكملها
+  const clickHandler = (e) => {
+    // تجاهل النقرات على الروابط الخارجية والأزرار المعينة
+    if (e.target.tagName === 'A' && e.target.href && e.target.href.startsWith('http')) {
       return;
     }
     
-    const openSmartlink = () => {
-      setTimeout(() => {
-        if (this.config.smartlink.openInNewTab) {
-          const newTab = window.open(this.config.smartlink.url, '_blank', 'noopener,noreferrer');
-          if (newTab) {
-            this.sessionData.smartlinkOpened = true;
-            this.saveSessionData();
-            console.log('✅ Smartlink opened in new tab');
-          }
-        } else {
-          window.location.href = this.config.smartlink.url;
-        }
-      }, this.config.smartlink.delay || 3000);
-    };
+    console.log('🖱️ تم اكتشاف نقرة - فتح Smartlink Popunder...');
     
-    const checkGameLoaded = (attempt = 1) => {
-      const iframe = document.getElementById('game-iframe');
-      
-      if (iframe && iframe.contentWindow) {
-        openSmartlink();
-      } else if (attempt < 10) {
-        setTimeout(() => checkGameLoaded(attempt + 1), 1000);
-      } else {
-        openSmartlink();
+    // فتح Popunder
+    this.openSmartlinkPopunder();
+    
+    // إزالة المستمع بعد التنفيذ
+    document.removeEventListener('click', clickHandler);
+    
+    // تحديث بيانات الجلسة
+    this.sessionData.smartlinkCount = (this.sessionData.smartlinkCount || 0) + 1;
+    this.sessionData.lastSmartlinkShown = Date.now();
+    this.saveSessionData();
+    
+    console.log(`📊 عدد مرات الظهور: ${this.sessionData.smartlinkCount}/${maxShows}`);
+    
+    // إعادة تفعيل المستمع بعد الفترة المحددة
+    setTimeout(() => {
+      if (this.sessionData.smartlinkCount < maxShows) {
+        console.log('🔄 إعادة تفعيل Smartlink Popunder...');
+        this.setupSmartlinkPopunder();
       }
-    };
+    }, minInterval);
+  };
+  
+  // إضافة المستمع
+  document.addEventListener('click', clickHandler, { once: false });
+  console.log('✅ Smartlink Popunder جاهز - في انتظار نقرة المستخدم...');
+}
+
+// دالة جديدة: فتح Popunder
+openSmartlinkPopunder() {
+  const url = this.config.smartlink.url;
+  
+  try {
+    // محاولة فتح النافذة في الخلفية (Popunder)
+    const popunder = window.open(url, '_blank', 'width=1,height=1,left=0,top=0');
     
-    setTimeout(() => checkGameLoaded(), 2000);
+    if (popunder) {
+      // إعادة التركيز على النافذة الحالية
+      setTimeout(() => {
+        window.focus();
+        if (typeof window.blur === 'function') {
+          popunder.blur();
+        }
+      }, 100);
+      
+      console.log('✅ تم فتح Smartlink Popunder بنجاح');
+      return true;
+    } else {
+      console.warn('⚠️ فشل فتح Popunder - ربما يوجد حاجب نوافذ منبثقة');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ خطأ في فتح Smartlink Popunder:', error);
+    return false;
   }
+}
+
+// دالة الطريقة القديمة (احتياطي)
+openSmartlinkDirect() {
+  const frequency = this.config.smartlink.frequency;
+  if (frequency === 'once_per_session' && this.sessionData.smartlinkOpened) {
+    console.log('⚠️ Smartlink already opened in this session');
+    return;
+  }
+  
+  const openSmartlink = () => {
+    setTimeout(() => {
+      if (this.config.smartlink.openInNewTab) {
+        const newTab = window.open(this.config.smartlink.url, '_blank', 'noopener,noreferrer');
+        if (newTab) {
+          this.sessionData.smartlinkOpened = true;
+          this.saveSessionData();
+          console.log('✅ Smartlink opened in new tab');
+        }
+      } else {
+        window.location.href = this.config.smartlink.url;
+      }
+    }, this.config.smartlink.delay || 3000);
+  };
+  
+  const checkGameLoaded = (attempt = 1) => {
+    const iframe = document.getElementById('game-iframe');
+    
+    if (iframe && iframe.contentWindow) {
+      openSmartlink();
+    } else if (attempt < 10) {
+      setTimeout(() => checkGameLoaded(attempt + 1), 1000);
+    } else {
+      openSmartlink();
+    }
+  };
+  
+  setTimeout(() => checkGameLoaded(), 2000);
+}
 
   // === 15. فحص وإصلاح الحاويات ===
   fixAdContainers() {
@@ -1073,12 +1102,14 @@ class AdsManager {
     try {
       const data = sessionStorage.getItem('adsSessionData');
       return data ? JSON.parse(data) : {
-        popunderShown: false,
-        popunderCount: 0,
-        smartlinkOpened: false,
-        adsLoaded: 0,
-        sessionId: Date.now()
-      };
+  popunderShown: false,
+  popunderCount: 0,
+  smartlinkOpened: false,
+  smartlinkCount: 0,
+  lastSmartlinkShown: null,
+  adsLoaded: 0,
+  sessionId: Date.now()
+};
     } catch (error) {
       console.error('خطأ في قراءة بيانات الجلسة:', error);
       return {
