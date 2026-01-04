@@ -738,50 +738,46 @@ class AdsManager {
   }
 
   // === 13. تحميل Popunder - مُصلح ✅ ===
-  loadPopunder() {
-    if (!this.config.popunder?.enabled) return;
-    
-    const frequency = this.config.popunder.frequency;
-    const maxPerSession = this.config.popunder.maxPerSession || 1;
-    
-    // التحقق من عدد المرات المسموح بها
-    if (frequency === 'once_per_session') {
-      const currentCount = this.sessionData.popunderCount || 0;
-      
-      if (currentCount >= maxPerSession) {
-        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
-        return;
-      }
-    }
-    
-    setTimeout(() => {
-      this.config.popunder.scripts.forEach((scriptUrl, index) => {
-        // التحقق من عدم تحميل السكريبت مسبقاً
-        if (this.loadedScripts.has(scriptUrl)) {
-          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = scriptUrl;
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        script.id = `popunder-script-${index}`;
-        
-        document.body.appendChild(script);
-        this.loadedScripts.add(scriptUrl);
-        
-        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-      });
-      
-      // تحديث العداد
-      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
-      this.sessionData.popunderShown = true;
-      this.saveSessionData();
-      
-      console.log(`📊 Popunder count: ${this.sessionData.popunderCount}/${maxPerSession}`);
-    }, this.config.popunder.delay || 8000);
-  }
+ // === 13. تحميل Popunder (نهائي – مرة واحدة فقط) ===
+loadPopunder() {
+  if (!this.config.popunder?.enabled) return;
+
+  const maxPerSession = this.config.popunder.maxPerSession || 1;
+  const currentCount = this.sessionData.popunderCount || 0;
+
+  if (currentCount >= maxPerSession) return;
+
+  // 🔒 تأكد أنه يُحقن مرة واحدة فقط
+  if (this._popunderInjected) return;
+  this._popunderInjected = true;
+
+  const injectPopunder = () => {
+    this.config.popunder.scripts.forEach((scriptUrl, index) => {
+      if (this.loadedScripts.has(scriptUrl)) return;
+
+      const script = document.createElement('script');
+      script.src = scriptUrl;
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      script.id = `popunder-script-${index}`;
+
+      document.body.appendChild(script);
+      this.loadedScripts.add(scriptUrl);
+
+      console.log(`✅ Popunder script loaded: ${scriptUrl}`);
+    });
+
+    // تحديث العداد
+    this.sessionData.popunderCount = currentCount + 1;
+    this.sessionData.popunderShown = true;
+    this.saveSessionData();
+
+    document.removeEventListener('click', injectPopunder);
+  };
+
+  // ⏳ انتظر أول click فقط
+  document.addEventListener('click', injectPopunder, { once: true });
+}
 
   // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
