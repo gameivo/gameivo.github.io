@@ -19,89 +19,140 @@ class AdsManager {
     this.adScalingObservers = new Map();
   }
 
-  // === نظام تحجيم الإعلانات الذكي ===
-  scaleAdElement(adElement) {
-    if (!adElement || !adElement.parentElement) return;
-    
-    const container = adElement.closest('[id^="ad-"]') || adElement.parentElement;
-    if (!container) return;
-    
-    const containerWidth = container.clientWidth;
-    const adWidth = adElement.offsetWidth || adElement.scrollWidth;
-    
-    if (adWidth > containerWidth && adWidth > 0) {
-      const scale = containerWidth / adWidth;
-      const scaleValue = Math.min(scale, 0.95);
-      
-      adElement.style.transform = `scale(${scaleValue})`;
-      adElement.style.transformOrigin = 'top center';
-      adElement.style.maxWidth = '100%';
-      adElement.style.overflow = 'hidden';
-      
-      console.log(`📐 تحجيم الإعلان: ${adWidth}px -> ${containerWidth}px`);
-    }
+  // === نظام تحجيم الإعلانات الذكي المحسّن ===
+scaleAdElement(adElement) {
+  if (!adElement || !adElement.parentElement) return;
+  
+  const container = adElement.closest('[id^="ad-"]') || adElement.parentElement;
+  if (!container) return;
+  
+  // الحصول على أبعاد الحاوية الفعلية
+  const containerWidth = container.clientWidth || container.offsetWidth;
+  const containerHeight = container.clientHeight || container.offsetHeight;
+  
+  if (containerWidth <= 0 || containerHeight <= 0) {
+    console.warn(`📏 الحاوية فارغة: ${container.id}`);
+    return;
   }
-
-  scaleAllAds() {
-    document.querySelectorAll('.ad-banner iframe, .ad-banner ins, div[id^="banner-"], div[id^="sidebar-"]')
-      .forEach(ad => this.scaleAdElement(ad));
-  }
-
-  startAdScalingSystem() {
-    console.log('📏 بدء نظام تحجيم الإعلانات...');
-    
-    const observer = new MutationObserver(() => {
-      setTimeout(() => this.scaleAllAds(), 100);
-    });
-    
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    setInterval(() => this.scaleAllAds(), 2000);
-    window.addEventListener('resize', () => this.scaleAllAds());
-  }
-
-  // === 1. تحميل الإعدادات ===
-  async init() {
+  
+  // محاولة الحصول على أبعاد الإعلان بطرق مختلفة
+  let adWidth = 0;
+  let adHeight = 0;
+  
+  if (adElement.tagName === 'IFRAME') {
+    // التعامل مع الإطارات الداخلية
     try {
-      this.filterUnityErrors();
-      this.fixAdContainers();
-      
-      const response = await fetch('ads.json');
-      if (!response.ok) throw new Error('Failed to load ads.json');
-      
-      this.config = await response.json();
-      console.log('✅ تم تحميل إعدادات الإعلانات');
-      
-      // ✅ التحقق من تفعيل Anti-AdBlock
-      const antiAdblockEnabled = this.config.antiAdblock?.enabled ?? true;
-      
-      if (antiAdblockEnabled) {
-        console.log('🔍 Anti-AdBlock مُفعّل - بدء الفحص...');
-        const adBlockDetected = await this.detectAdBlockEffectively();
-        
-        if (adBlockDetected) {
-          console.log('🚫 AdBlock detected - Blocking page access');
-          this.blockPageAccess();
-          return;
-        }
-      } else {
-        console.log('⚠️ Anti-AdBlock معطّل - تخطي الفحص');
+      const iframeDoc = adElement.contentDocument || adElement.contentWindow.document;
+      const iframeBody = iframeDoc.body;
+      if (iframeBody) {
+        adWidth = iframeBody.scrollWidth || iframeBody.offsetWidth;
+        adHeight = iframeBody.scrollHeight || iframeBody.offsetHeight;
       }
-      
-      // تحميل جميع الإعلانات
-      await this.loadAllAds();
-      console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
-      this.startAdScalingSystem();
-      
-    } catch (error) {
-      console.error('❌ خطأ في تحميل الإعلانات:', error);
-      this.showFallbackAds();
+    } catch (e) {
+      // إذا فشل الوصول إلى محتوى iframe
+      adWidth = adElement.offsetWidth || adElement.scrollWidth;
+      adHeight = adElement.offsetHeight || adElement.scrollHeight;
+    }
+  } else {
+    // للعناصر العادية
+    adWidth = adElement.scrollWidth || adElement.offsetWidth;
+    adHeight = adElement.scrollHeight || adElement.offsetHeight;
+  }
+  
+  // إذا لم نتمكن من الحصول على الأبعاد
+  if (adWidth <= 0) {
+    adWidth = adElement.getAttribute('width') || adElement.style.width;
+    if (adWidth && typeof adWidth === 'string') {
+      adWidth = parseInt(adWidth.replace('px', ''));
     }
   }
+  
+  // تطبيق التحجيم الذكي
+  if (adWidth > containerWidth && containerWidth > 0) {
+    // حساب نسبة التحجيم بناءً على العرض والارتفاع
+    const widthScale = containerWidth / adWidth;
+    const heightScale = containerHeight / adHeight;
+    const scale = Math.min(widthScale, heightScale, 0.95); // لا تتجاوز 95%
+    
+    // تطبيق التحجيم مع الحفاظ على التناسب
+    adElement.style.transform = `scale(${scale})`;
+    adElement.style.transformOrigin = 'top left';
+    adElement.style.maxWidth = `${containerWidth}px`;
+    adElement.style.maxHeight = `${containerHeight}px`;
+    adElement.style.overflow = 'hidden';
+    adElement.style.display = 'block';
+    adElement.style.margin = '0 auto';
+    
+    // إضافة فئة للتتبع
+    adElement.classList.add('ad-scaled');
+    
+    console.log(`📐 تحجيم الإعلان: ${adWidth}x${adHeight} -> ${containerWidth}x${containerHeight} (مقياس: ${scale.toFixed(2)})`);
+    
+    // إعادة حساب بعد التحجيم للتأكد
+    setTimeout(() => {
+      const scaledWidth = adElement.offsetWidth;
+      const scaledHeight = adElement.offsetHeight;
+      
+      if (scaledWidth > containerWidth || scaledHeight > containerHeight) {
+        // إذا كان لا يزال كبيراً، تطبيق تحجيم إضافي
+        const extraScale = Math.min(
+          containerWidth / scaledWidth,
+          containerHeight / scaledHeight,
+          0.9
+        );
+        adElement.style.transform = `scale(${extraScale})`;
+        console.log(`🔧 تطبيق تحجيم إضافي: ${extraScale.toFixed(2)}`);
+      }
+    }, 500);
+  } else if (adWidth > 0 && containerWidth > 0) {
+    // الإعلان يتناسب مع الحاوية
+    adElement.style.maxWidth = '100%';
+    adElement.style.maxHeight = '100%';
+    adElement.style.overflow = 'hidden';
+  }
+}
 
+// إضافة هذه الدالة الجديدة للتحقق من الإعلانات المحددة
+checkAndFixSpecificAds() {
+  // إعلانات الـ 300x250
+  const squareAds = document.querySelectorAll('[id*="300x250"], [style*="300px"], [height="250"]');
+  squareAds.forEach(ad => {
+    const container = ad.closest('.ad-banner, [id^="ad-"]');
+    if (container) {
+      const containerWidth = container.clientWidth;
+      if (containerWidth < 300) {
+        ad.style.transform = `scale(${containerWidth / 300})`;
+        ad.style.transformOrigin = 'top left';
+      }
+    }
+  });
+  
+  // إعلانات الـ 728x90
+  const wideAds = document.querySelectorAll('[id*="728x90"], [width="728"], [style*="728px"]');
+  wideAds.forEach(ad => {
+    const container = ad.closest('.ad-banner, [id^="ad-"]');
+    if (container) {
+      const containerWidth = container.clientWidth;
+      if (containerWidth < 728) {
+        ad.style.transform = `scale(${containerWidth / 728})`;
+        ad.style.transformOrigin = 'top left';
+      }
+    }
+  });
+  
+  // إعلانات الـ 468x60
+  const mediumAds = document.querySelectorAll('[id*="468x60"], [width="468"], [style*="468px"]');
+  mediumAds.forEach(ad => {
+    const container = ad.closest('.ad-banner, [id^="ad-"]');
+    if (container) {
+      const containerWidth = container.clientWidth;
+      if (containerWidth < 468) {
+        ad.style.transform = `scale(${containerWidth / 468})`;
+        ad.style.transformOrigin = 'top left';
+      }
+    }
+  });
+}
   // === 2. كشف AdBlock بشكل فعال ===
   async detectAdBlockEffectively() {
     console.log('🔍 بدء كشف AdBlock...');
@@ -605,15 +656,12 @@ class AdsManager {
         script.id = `script-${uniqueId}`;
         
         script.onload = () => {
-  console.log(`✅ تم تحميل إعلان: ${ad.id}`);
-  setTimeout(() => {
-    const adElement = document.getElementById(`banner-${uniqueId}`);
-    if (adElement) {
-      this.scaleAdElement(adElement);          // التحجيم السابق
-      this.forceContainerFit(adDiv, adElement); // التعديل الجديد
-    }
-  }, 1000);
-};
+            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+            setTimeout(() => {
+              const adElement = document.getElementById(`banner-${uniqueId}`);
+              if (adElement) this.scaleAdElement(adElement);
+            }, 1000);
+        };
         
         script.onerror = () => {
             console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
@@ -755,15 +803,12 @@ class AdsManager {
         script.id = `sidebar-script-${uniqueId}`;
         
         script.onload = () => {
-  console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
-  setTimeout(() => {
-    const adElement = document.getElementById(`sidebar-${uniqueId}`);
-    if (adElement) {
-      this.scaleAdElement(adElement);
-      this.forceContainerFit(adDiv, adElement);
-    }
-  }, 1000);
-};
+            console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
+            setTimeout(() => {
+              const adElement = document.getElementById(`sidebar-${uniqueId}`);
+              if (adElement) this.scaleAdElement(adElement);
+            }, 1000);
+        };
         
         script.onerror = () => {
             console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
@@ -1224,39 +1269,7 @@ class AdsManager {
     this.loadedScripts.clear();
     console.log('🧹 تم تنظيف موارد الإعلانات');
   }
-  // === 23. كشف نسبة العرض/الارتفاع للإعلان الفعلي ===
-detectAdRatio(adElement) {
-  const iframe = adElement.querySelector('iframe');
-  if (!iframe) return null;
-  return iframe.offsetWidth / iframe.offsetHeight; // >1 عريض  ≈1 مربع  <1 طويل
 }
-
-// === 24. إجبار الحاوية على احتواء الإعلان بدون تقطيع ===
-forceContainerFit(adWrapper, adElement) {
-  const ratio = this.detectAdRatio(adElement);
-  if (!ratio) return;
-
-  const wrapper = adWrapper.closest('.ad-banner');
-  if (!wrapper) return;
-
-  // حالة 1: إعلان مربع / طويل وضعناه في بانر عريض (250×250, 300×250, 336×280 …)
-  if (ratio <= 1.4 && wrapper.clientWidth > 400) {
-    wrapper.style.maxWidth = '340px';        // نحدّد عرضاً مربّعاً
-    wrapper.style.margin = '15px auto';      // توسيط
-    wrapper.classList.add('ad-square-mode'); // كلاس نستعمله في CSS
-  }
-
-  // حالة 2: إعلان عريض وضعناه في حاوية صغيرة (Sidebar 300×250)
-  if (ratio > 2 && wrapper.clientWidth < 400) {
-    wrapper.style.maxWidth = '100%';
-    wrapper.style.minHeight = '90px';        // نعطيه ارتفاع البانر العريض
-    wrapper.classList.add('ad-horizontal-mode');
-  }
-
-  // إعادة التحجيم الفوري
-  this.scaleAdElement(adElement);
-}
-
 
 // === تشغيل تلقائي ===
 document.addEventListener('DOMContentLoaded', () => {
@@ -1403,16 +1416,6 @@ document.addEventListener('DOMContentLoaded', () => {
         position: relative;
         width: 100%;
       }
-      .ad-square-mode {
-  min-height: auto !important;
-  padding: 10px !important;
-  border-radius: 8px;
-}
-
-.ad-horizontal-mode {
-  min-height: 90px !important;
-  padding: 8px !important;
-}
     }
 
     ins.adsbygoogle[data-ad-status="unfilled"],
