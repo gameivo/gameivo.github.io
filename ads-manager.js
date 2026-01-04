@@ -19,6 +19,50 @@ class AdsManager {
     this.adScalingObservers = new Map(); // لمراقبة وتحديد حجم الإعلانات
   }
 
+    // === نظام تحجيم الإعلانات الذكي ===
+  scaleAdElement(adElement) {
+    if (!adElement || !adElement.parentElement) return;
+    
+    const container = adElement.closest('[id^="ad-"]') || adElement.parentElement;
+    if (!container) return;
+    
+    const containerWidth = container.clientWidth;
+    const adWidth = adElement.offsetWidth || adElement.scrollWidth;
+    
+    if (adWidth > containerWidth && adWidth > 0) {
+      const scale = containerWidth / adWidth;
+      const scaleValue = Math.min(scale, 0.95);
+      
+      adElement.style.transform = `scale(${scaleValue})`;
+      adElement.style.transformOrigin = 'top center';
+      adElement.style.maxWidth = '100%';
+      adElement.style.overflow = 'hidden';
+      
+      console.log(`📐 تحجيم الإعلان: ${adWidth}px -> ${containerWidth}px`);
+    }
+  }
+
+  scaleAllAds() {
+    document.querySelectorAll('.ad-banner iframe, .ad-banner ins, div[id^="banner-"], div[id^="sidebar-"]')
+      .forEach(ad => this.scaleAdElement(ad));
+  }
+
+  startAdScalingSystem() {
+    console.log('📏 بدء نظام تحجيم الإعلانات...');
+    
+    const observer = new MutationObserver(() => {
+      setTimeout(() => this.scaleAllAds(), 100);
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    
+    setInterval(() => this.scaleAllAds(), 2000);
+    window.addEventListener('resize', () => this.scaleAllAds());
+  }
+
   // === 1. تحميل الإعدادات ===
   async init() {
     try {
@@ -50,6 +94,7 @@ class AdsManager {
       // تحميل جميع الإعلانات
       await this.loadAllAds();
       console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
+      this.startAdScalingSystem();
       
       // بدء نظام مراقبة وتحديد حجم الإعلانات
       this.startAdScalingSystem();
@@ -652,8 +697,13 @@ class AdsManager {
         script.setAttribute('data-cfasync', 'false');
         script.id = `script-${uniqueId}`;
         
-        script.onload = () => {
+                script.onload = () => {
             console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+            setTimeout(() => {
+              const adElement = document.getElementById(`banner-${uniqueId}`);
+              if (adElement) this.scaleAdElement(adElement);
+            }, 1000);
+        };
             // تطبيق التحديد الحجم بعد تحميل الإعلان
             setTimeout(() => {
               const adElement = document.getElementById(`banner-${uniqueId}`);
@@ -802,8 +852,13 @@ class AdsManager {
         script.setAttribute('data-cfasync', 'false');
         script.id = `sidebar-script-${uniqueId}`;
         
-        script.onload = () => {
+                script.onload = () => {
             console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
+            setTimeout(() => {
+              const adElement = document.getElementById(`sidebar-${uniqueId}`);
+              if (adElement) this.scaleAdElement(adElement);
+            }, 1000);
+        };
             // تطبيق التحديد الحجم بعد تحميل الإعلان
             setTimeout(() => {
               const adElement = document.getElementById(`sidebar-${uniqueId}`);
@@ -1389,6 +1444,41 @@ document.addEventListener('DOMContentLoaded', () => {
     .ad-container-responsive {
       max-width: 100vw !important;
       overflow-x: hidden !important;
+    }
+
+        /* === حل نهائي للإعلانات الكبيرة على الموبايل === */
+    .ad-banner iframe,
+    .ad-banner ins,
+    .ad-modern-wrapper iframe,
+    .ad-modern-wrapper ins,
+    div[id^="banner-"] iframe,
+    div[id^="sidebar-"] iframe {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      transform-origin: top center !important;
+      display: block !important;
+      margin: 0 auto !important;
+      transform: scale(0.95) !important;
+    }
+
+    @media (max-width: 768px) {
+      .ad-banner iframe,
+      .ad-banner ins {
+        transform: scale(0.9) !important;
+        transform-origin: center center !important;
+      }
+      
+      html, body {
+        overflow-x: hidden !important;
+        position: relative;
+        width: 100%;
+      }
+    }
+
+    ins.adsbygoogle[data-ad-status="unfilled"],
+    ins.adsbygoogle iframe {
+      max-width: 100% !important;
+      width: 100% !important;
     }
     
     /* إصلاحات خاصة للـ iframes والإعلانات */
