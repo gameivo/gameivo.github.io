@@ -19,169 +19,33 @@ class AdsManager {
     this.adScalingObservers = new Map();
   }
 
-  // === نظام تحجيم الإعلانات الذكي المحسّن ===
+   // === نظام تحجيم الإعلانات الذكي ===
   scaleAdElement(adElement) {
     if (!adElement || !adElement.parentElement) return;
     
     const container = adElement.closest('[id^="ad-"]') || adElement.parentElement;
     if (!container) return;
     
-    // الحصول على أبعاد الحاوية الفعلية
-    const containerWidth = container.clientWidth || container.offsetWidth;
-    const containerHeight = container.clientHeight || container.offsetHeight;
+    const containerWidth = container.clientWidth;
+    const adWidth = adElement.offsetWidth || adElement.scrollWidth;
     
-    if (containerWidth <= 0 || containerHeight <= 0) {
-      console.warn(`📏 الحاوية فارغة: ${container.id}`);
-      return;
-    }
-    
-    // محاولة الحصول على أبعاد الإعلان بطرق مختلفة
-    let adWidth = 0;
-    let adHeight = 0;
-    
-    if (adElement.tagName === 'IFRAME') {
-      // التعامل مع الإطارات الداخلية
-      try {
-        const iframeDoc = adElement.contentDocument || adElement.contentWindow.document;
-        const iframeBody = iframeDoc.body;
-        if (iframeBody) {
-          adWidth = iframeBody.scrollWidth || iframeBody.offsetWidth;
-          adHeight = iframeBody.scrollHeight || iframeBody.offsetHeight;
-        }
-      } catch (e) {
-        // إذا فشل الوصول إلى محتوى iframe
-        adWidth = adElement.offsetWidth || adElement.scrollWidth;
-        adHeight = adElement.offsetHeight || adElement.scrollHeight;
-      }
-    } else {
-      // للعناصر العادية
-      adWidth = adElement.scrollWidth || adElement.offsetWidth;
-      adHeight = adElement.scrollHeight || adElement.offsetHeight;
-    }
-    
-    // إذا لم نتمكن من الحصول على الأبعاد
-    if (adWidth <= 0) {
-      adWidth = adElement.getAttribute('width') || adElement.style.width;
-      if (adWidth && typeof adWidth === 'string') {
-        adWidth = parseInt(adWidth.replace('px', ''));
-      }
-    }
-    
-    // تطبيق التحجيم الذكي
-    if (adWidth > containerWidth && containerWidth > 0) {
-      // حساب نسبة التحجيم بناءً على العرض والارتفاع
-      const widthScale = containerWidth / adWidth;
-      const heightScale = containerHeight / adHeight;
-      const scale = Math.min(widthScale, heightScale, 0.95); // لا تتجاوز 95%
+    if (adWidth > containerWidth && adWidth > 0) {
+      const scale = containerWidth / adWidth;
+      const scaleValue = Math.min(scale, 0.95);
       
-      // تطبيق التحجيم مع الحفاظ على التناسب
-      adElement.style.transform = `scale(${scale})`;
-      adElement.style.transformOrigin = 'top left';
-      adElement.style.maxWidth = `${containerWidth}px`;
-      adElement.style.maxHeight = `${containerHeight}px`;
-      adElement.style.overflow = 'hidden';
-      adElement.style.display = 'block';
-      adElement.style.margin = '0 auto';
-      
-      // إضافة فئة للتتبع
-      adElement.classList.add('ad-scaled');
-      
-      console.log(`📐 تحجيم الإعلان: ${adWidth}x${adHeight} -> ${containerWidth}x${containerHeight} (مقياس: ${scale.toFixed(2)})`);
-      
-      // إعادة حساب بعد التحجيم للتأكد
-      setTimeout(() => {
-        const scaledWidth = adElement.offsetWidth;
-        const scaledHeight = adElement.offsetHeight;
-        
-        if (scaledWidth > containerWidth || scaledHeight > containerHeight) {
-          // إذا كان لا يزال كبيراً، تطبيق تحجيم إضافي
-          const extraScale = Math.min(
-            containerWidth / scaledWidth,
-            containerHeight / scaledHeight,
-            0.9
-          );
-          adElement.style.transform = `scale(${extraScale})`;
-          console.log(`🔧 تطبيق تحجيم إضافي: ${extraScale.toFixed(2)}`);
-        }
-      }, 500);
-    } else if (adWidth > 0 && containerWidth > 0) {
-      // الإعلان يتناسب مع الحاوية
+      adElement.style.transform = `scale(${scaleValue})`;
+      adElement.style.transformOrigin = 'top center';
       adElement.style.maxWidth = '100%';
-      adElement.style.maxHeight = '100%';
       adElement.style.overflow = 'hidden';
+      
+      console.log(`📐 تحجيم الإعلان: ${adWidth}px -> ${containerWidth}px`);
     }
   }
 
-  // === التحقق من الإعلانات المحددة ===
-  checkAndFixSpecificAds() {
-    // إعلانات الـ 300x250
-    const squareAds = document.querySelectorAll('[id*="300x250"], [style*="300px"], [height="250"]');
-    squareAds.forEach(ad => {
-      const container = ad.closest('.ad-banner, [id^="ad-"]');
-      if (container) {
-        const containerWidth = container.clientWidth;
-        if (containerWidth < 300) {
-          ad.style.transform = `scale(${containerWidth / 300})`;
-          ad.style.transformOrigin = 'top left';
-        }
-      }
-    });
-    
-    // إعلانات الـ 728x90
-    const wideAds = document.querySelectorAll('[id*="728x90"], [width="728"], [style*="728px"]');
-    wideAds.forEach(ad => {
-      const container = ad.closest('.ad-banner, [id^="ad-"]');
-      if (container) {
-        const containerWidth = container.clientWidth;
-        if (containerWidth < 728) {
-          ad.style.transform = `scale(${containerWidth / 728})`;
-          ad.style.transformOrigin = 'top left';
-        }
-      }
-    });
-    
-    // إعلانات الـ 468x60
-    const mediumAds = document.querySelectorAll('[id*="468x60"], [width="468"], [style*="468px"]');
-    mediumAds.forEach(ad => {
-      const container = ad.closest('.ad-banner, [id^="ad-"]');
-      if (container) {
-        const containerWidth = container.clientWidth;
-        if (containerWidth < 468) {
-          ad.style.transform = `scale(${containerWidth / 468})`;
-          ad.style.transformOrigin = 'top left';
-        }
-      }
-    });
-  }
-
-  scaleAllAds() {
-    // التحقق من جميع أنواع الإعلانات
-    const adSelectors = [
-      '.ad-banner iframe',
-      '.ad-banner ins',
-      'div[id^="banner-"]',
-      'div[id^="sidebar-"]',
-      'div[id*="300x250"]',
-      'div[id*="728x90"]',
-      'div[id*="468x60"]',
-      'iframe[src*="ads"]',
-      'ins.adsbygoogle',
-      '.ad-modern-wrapper > div',
-      '.ad-content-scaler > *'
-    ];
-    
-    adSelectors.forEach(selector => {
-      try {
-        document.querySelectorAll(selector).forEach(ad => {
-          this.scaleAdElement(ad);
-        });
-      } catch (e) {
-        console.warn(`⚠️ خطأ في معالجة ${selector}:`, e);
-      }
-    });
-    
-    // التحقق من الإعلانات المحددة
-    this.checkAndFixSpecificAds();
+ 
+    scaleAllAds() {
+    document.querySelectorAll('.ad-banner iframe, .ad-banner ins, div[id^="banner-"], div[id^="sidebar-"]')
+      .forEach(ad => this.scaleAdElement(ad));
   }
 
   startAdScalingSystem() {
