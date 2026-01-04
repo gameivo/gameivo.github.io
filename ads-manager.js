@@ -1,11 +1,359 @@
 /**
- * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
- * ✅ إصلاح البانرات السوداء
- * ✅ إصلاح Popunder للعمل مرة واحدة فقط
- * ✅ إضافة جميع الإعلانات الجديدة
- * ✅ الحفاظ على نظام Anti-AdBlock
- * ✅ إضافة نظام تحجيم ذكي للإعلانات (Zero Clipping Solution)
+ * 🎯 نظام تحجيم الإعلانات الذكي للهواتف - الحل النهائي
+ * ✅ بدون transform: scale()
+ * ✅ بدون تعديل ads.json
+ * ✅ يتكيف مع جميع شبكات الإعلانات
+ * ✅ يمنع القص والتمرير الأفقي
  */
+
+class MobileAdScaler {
+  constructor() {
+    this.isMobile = window.innerWidth <= 768;
+    this.observer = null;
+    this.initialized = false;
+  }
+
+  init() {
+    if (this.initialized) return;
+    
+    console.log('📱 بدء نظام تحجيم الإعلانات للهواتف...');
+    
+    // 1. إضافة CSS أولاً
+    this.addMobileAdStyles();
+    
+    // 2. مراقبة DOM للإعلانات الجديدة
+    this.setupMutationObserver();
+    
+    // 3. معالجة الإعلانات الحالية
+    setTimeout(() => this.processExistingAds(), 1000);
+    
+    // 4. إعادة المعالجة عند تغيير الحجم
+    window.addEventListener('resize', () => {
+      setTimeout(() => this.processAllAds(), 300);
+    });
+    
+    this.initialized = true;
+  }
+
+  addMobileAdStyles() {
+    const style = document.createElement('style');
+    style.id = 'mobile-ad-scaler-styles';
+    style.textContent = `
+      /* === الأنماط الأساسية للهواتف === */
+      @media (max-width: 768px) {
+        /* حاوية ذكية للإعلانات */
+        .mobile-ad-wrapper {
+          width: 100% !important;
+          max-width: 100vw !important;
+          overflow: hidden !important;
+          position: relative;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          background: transparent !important;
+          margin: 10px 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+        }
+        
+        /* إجبار جميع العناصر الإعلانية على الانسجام */
+        .mobile-ad-wrapper iframe,
+        .mobile-ad-wrapper ins,
+        .mobile-ad-wrapper div[id*="ad"],
+        .mobile-ad-wrapper div[class*="ad"],
+        .mobile-ad-wrapper .adsbygoogle,
+        .mobile-ad-wrapper [id^="banner-"],
+        .mobile-ad-wrapper [id^="ad-"],
+        .mobile-ad-wrapper > div,
+        .mobile-ad-wrapper > ins {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          min-height: 50px !important;
+          max-height: 400px !important;
+          overflow: hidden !important;
+          display: block !important;
+          margin: 0 auto !important;
+          transform: none !important;
+          position: relative !important;
+          box-sizing: border-box !important;
+        }
+        
+        /* إعلانات Google Ads */
+        ins.adsbygoogle,
+        .adsbygoogle iframe {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          min-height: 90px !important;
+          max-height: 300px !important;
+        }
+        
+        /* إعلانات Adsterra */
+        div[id*="adsterra-"],
+        iframe[src*="adsterra"] {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        
+        /* إعلانات Propeller */
+        div[id*="propeller-"],
+        iframe[src*="propellerads"] {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        
+        /* إزالة أي قيود عرض */
+        *[width]:not([width="100%"]) {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        
+        /* منع التمرير الأفقي نهائياً */
+        .mobile-ad-wrapper {
+          -webkit-overflow-scrolling: touch;
+          overflow-x: hidden !important;
+        }
+        
+        /* الحفاظ على النقر */
+        .mobile-ad-wrapper * {
+          pointer-events: auto !important;
+          touch-action: manipulation !important;
+        }
+        
+        /* إصلاح للبانرات العريضة */
+        .mobile-ad-wrapper[data-ad-format="728x90"],
+        .mobile-ad-wrapper[data-ad-format="970x250"],
+        .mobile-ad-wrapper[data-ad-format="leaderboard"] {
+          height: auto !important;
+          min-height: 90px !important;
+          max-height: 250px !important;
+        }
+      }
+      
+      /* === الأنماط لجميع الأجهزة === */
+      .mobile-ad-wrapper {
+        transition: all 0.3s ease;
+      }
+      
+      /* إخفاء الشريط الأبيض */
+      .mobile-ad-wrapper ins[data-ad-status="unfilled"] {
+        min-height: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        border: none !important;
+      }
+    `;
+    
+    document.head.appendChild(style);
+  }
+
+  wrapAdElement(adElement) {
+    if (!adElement || adElement.closest('.mobile-ad-wrapper')) return;
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mobile-ad-wrapper';
+    
+    // استخراج معلومات التنسيق من الإعلان
+    const width = adElement.getAttribute('width') || adElement.style.width || adElement.offsetWidth;
+    const height = adElement.getAttribute('height') || adElement.style.height || adElement.offsetHeight;
+    
+    if (width && height) {
+      wrapper.setAttribute('data-original-size', `${width}x${height}`);
+      
+      // تحديد التنسيق
+      if (width >= 728 && height === 90) wrapper.setAttribute('data-ad-format', '728x90');
+      if (width >= 970 && height >= 250) wrapper.setAttribute('data-ad-format', '970x250');
+      if (width >= 300 && height >= 250) wrapper.setAttribute('data-ad-format', '300x250');
+      if (width >= 300 && height >= 600) wrapper.setAttribute('data-ad-format', '300x600');
+    }
+    
+    // إحاطة الإعلان بالـ Wrapper
+    adElement.parentNode.insertBefore(wrapper, adElement);
+    wrapper.appendChild(adElement);
+    
+    // تطبيق التعديلات
+    this.applyMobileFixes(adElement);
+    
+    console.log('📦 تم تغليف الإعلان:', wrapper.getAttribute('data-original-size'));
+  }
+
+  applyMobileFixes(adElement) {
+    if (!this.isMobile) return;
+    
+    // إزالة أي عرض ثابت
+    adElement.style.width = '100%';
+    adElement.style.maxWidth = '100%';
+    adElement.style.height = 'auto';
+    adElement.style.minHeight = '50px';
+    adElement.style.maxHeight = '400px';
+    adElement.style.overflow = 'hidden';
+    adElement.style.display = 'block';
+    adElement.style.margin = '0 auto';
+    
+    // إزالة أي transform
+    adElement.style.transform = 'none';
+    adElement.style.webkitTransform = 'none';
+    
+    // إصلاح خاص للـ iframes
+    if (adElement.tagName === 'IFRAME') {
+      adElement.style.border = 'none';
+      adElement.style.scrolling = 'no';
+      adElement.setAttribute('scrolling', 'no');
+    }
+    
+    // إصلاح خاص لـ Google Ads
+    if (adElement.className.includes('adsbygoogle') || adElement.tagName === 'INS') {
+      adElement.style.display = 'block';
+      adElement.style.textAlign = 'center';
+    }
+  }
+
+  processExistingAds() {
+    console.log('🔍 معالجة الإعلانات الحالية...');
+    
+    // البحث عن جميع العناصر الإعلانية
+    const adSelectors = [
+      'iframe[src*="ads"]',
+      'iframe[src*="ad"]',
+      'ins.adsbygoogle',
+      'div[id*="ad-"]',
+      'div[class*="ad-"]',
+      'div[id*="banner-"]',
+      'div[id*="adsterra"]',
+      'div[id*="propeller"]',
+      '[data-ad-client]',
+      '[data-ad-slot]',
+      '.ad-banner',
+      '.ad-container',
+      '.ad-wrapper'
+    ];
+    
+    adSelectors.forEach(selector => {
+      try {
+        document.querySelectorAll(selector).forEach(ad => {
+          if (this.isAdElement(ad)) {
+            this.wrapAdElement(ad);
+          }
+        });
+      } catch (e) {
+        console.log('⚠️ خطأ في selector:', selector, e.message);
+      }
+    });
+  }
+
+  processAllAds() {
+    this.isMobile = window.innerWidth <= 768;
+    
+    if (this.isMobile) {
+      document.querySelectorAll('.mobile-ad-wrapper').forEach(wrapper => {
+        const adElement = wrapper.firstElementChild;
+        if (adElement) {
+          this.applyMobileFixes(adElement);
+        }
+      });
+    }
+  }
+
+  isAdElement(element) {
+    // التحقق مما إذا كان العنصر إعلاناً
+    if (!element) return false;
+    
+    const src = element.src || '';
+    const id = element.id || '';
+    const className = element.className || '';
+    const styles = element.style.cssText || '';
+    
+    return (
+      src.includes('ads') ||
+      src.includes('ad') ||
+      id.includes('ad') ||
+      id.includes('banner') ||
+      id.includes('adsterra') ||
+      id.includes('propeller') ||
+      className.includes('adsbygoogle') ||
+      className.includes('ad-') ||
+      styles.includes('ad') ||
+      element.hasAttribute('data-ad-client') ||
+      element.hasAttribute('data-ad-slot')
+    );
+  }
+
+  setupMutationObserver() {
+    this.observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) {
+              // التحقق من العنصر نفسه
+              if (this.isAdElement(node)) {
+                setTimeout(() => this.wrapAdElement(node), 100);
+              }
+              
+              // التحقق من العناصر الفرعية
+              const childAds = node.querySelectorAll(
+                'iframe, ins, div[id*="ad"], div[class*="ad"], [data-ad-client]'
+              );
+              childAds.forEach(ad => {
+                if (this.isAdElement(ad)) {
+                  setTimeout(() => this.wrapAdElement(ad), 100);
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+    
+    this.observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    
+    const styles = document.getElementById('mobile-ad-scaler-styles');
+    if (styles) {
+      styles.remove();
+    }
+    
+    console.log('🧹 تم تنظيف نظام تحجيم الإعلانات');
+  }
+}
+
+// === التشغيل التلقائي ===
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 تحميل نظام تحجيم الإعلانات للهواتف...');
+  
+  const mobileAdScaler = new MobileAdScaler();
+  
+  // تأخير بسيط لضمان تحميل الإعلانات أولاً
+  setTimeout(() => {
+    mobileAdScaler.init();
+    window.mobileAdScaler = mobileAdScaler;
+  }, 2000);
+  
+  // إعادة التهيئة بعد 5 ثواني (لضمان تحميل الإعلانات المتأخرة)
+  setTimeout(() => {
+    if (window.innerWidth <= 768) {
+      mobileAdScaler.processExistingAds();
+    }
+  }, 5000);
+});
+
+// === دالة مساعدة للإضافة اليدوية ===
+window.forceMobileAdResize = function() {
+  if (window.mobileAdScaler) {
+    window.mobileAdScaler.processExistingAds();
+    console.log('🔄 إعادة تحجيم الإعلانات يدوياً');
+  }
+};
 
 class AdsManager {
   constructor() {
