@@ -605,12 +605,15 @@ class AdsManager {
         script.id = `script-${uniqueId}`;
         
         script.onload = () => {
-            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
-            setTimeout(() => {
-              const adElement = document.getElementById(`banner-${uniqueId}`);
-              if (adElement) this.scaleAdElement(adElement);
-            }, 1000);
-        };
+  console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+  setTimeout(() => {
+    const adElement = document.getElementById(`banner-${uniqueId}`);
+    if (adElement) {
+      this.scaleAdElement(adElement);          // التحجيم السابق
+      this.forceContainerFit(adDiv, adElement); // التعديل الجديد
+    }
+  }, 1000);
+};
         
         script.onerror = () => {
             console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
@@ -752,12 +755,15 @@ class AdsManager {
         script.id = `sidebar-script-${uniqueId}`;
         
         script.onload = () => {
-            console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
-            setTimeout(() => {
-              const adElement = document.getElementById(`sidebar-${uniqueId}`);
-              if (adElement) this.scaleAdElement(adElement);
-            }, 1000);
-        };
+  console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
+  setTimeout(() => {
+    const adElement = document.getElementById(`sidebar-${uniqueId}`);
+    if (adElement) {
+      this.scaleAdElement(adElement);
+      this.forceContainerFit(adDiv, adElement);
+    }
+  }, 1000);
+};
         
         script.onerror = () => {
             console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
@@ -1218,7 +1224,39 @@ class AdsManager {
     this.loadedScripts.clear();
     console.log('🧹 تم تنظيف موارد الإعلانات');
   }
+  // === 23. كشف نسبة العرض/الارتفاع للإعلان الفعلي ===
+detectAdRatio(adElement) {
+  const iframe = adElement.querySelector('iframe');
+  if (!iframe) return null;
+  return iframe.offsetWidth / iframe.offsetHeight; // >1 عريض  ≈1 مربع  <1 طويل
 }
+
+// === 24. إجبار الحاوية على احتواء الإعلان بدون تقطيع ===
+forceContainerFit(adWrapper, adElement) {
+  const ratio = this.detectAdRatio(adElement);
+  if (!ratio) return;
+
+  const wrapper = adWrapper.closest('.ad-banner');
+  if (!wrapper) return;
+
+  // حالة 1: إعلان مربع / طويل وضعناه في بانر عريض (250×250, 300×250, 336×280 …)
+  if (ratio <= 1.4 && wrapper.clientWidth > 400) {
+    wrapper.style.maxWidth = '340px';        // نحدّد عرضاً مربّعاً
+    wrapper.style.margin = '15px auto';      // توسيط
+    wrapper.classList.add('ad-square-mode'); // كلاس نستعمله في CSS
+  }
+
+  // حالة 2: إعلان عريض وضعناه في حاوية صغيرة (Sidebar 300×250)
+  if (ratio > 2 && wrapper.clientWidth < 400) {
+    wrapper.style.maxWidth = '100%';
+    wrapper.style.minHeight = '90px';        // نعطيه ارتفاع البانر العريض
+    wrapper.classList.add('ad-horizontal-mode');
+  }
+
+  // إعادة التحجيم الفوري
+  this.scaleAdElement(adElement);
+}
+
 
 // === تشغيل تلقائي ===
 document.addEventListener('DOMContentLoaded', () => {
@@ -1365,6 +1403,16 @@ document.addEventListener('DOMContentLoaded', () => {
         position: relative;
         width: 100%;
       }
+      .ad-square-mode {
+  min-height: auto !important;
+  padding: 10px !important;
+  border-radius: 8px;
+}
+
+.ad-horizontal-mode {
+  min-height: 90px !important;
+  padding: 8px !important;
+}
     }
 
     ins.adsbygoogle[data-ad-status="unfilled"],
