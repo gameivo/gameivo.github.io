@@ -737,48 +737,69 @@ class AdsManager {
     }, this.config.socialBar.delay || 5000);
   }
 
-  // === 13. تحميل Popunder - مُصلح ✅ ===
- // === 13. تحميل Popunder (نهائي – مرة واحدة فقط) ===
-loadPopunder() {
-  if (!this.config.popunder?.enabled) return;
-
-  const maxPerSession = this.config.popunder.maxPerSession || 1;
-  const currentCount = this.sessionData.popunderCount || 0;
-
-  if (currentCount >= maxPerSession) return;
-
-  // 🔒 تأكد أنه يُحقن مرة واحدة فقط
-  if (this._popunderInjected) return;
-  this._popunderInjected = true;
-
-  const injectPopunder = () => {
-    this.config.popunder.scripts.forEach((scriptUrl, index) => {
-      if (this.loadedScripts.has(scriptUrl)) return;
-
-      const script = document.createElement('script');
-      script.src = scriptUrl;
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.id = `popunder-script-${index}`;
-
-      document.body.appendChild(script);
-      this.loadedScripts.add(scriptUrl);
-
-      console.log(`✅ Popunder script loaded: ${scriptUrl}`);
-    });
-
-    // تحديث العداد
-    this.sessionData.popunderCount = currentCount + 1;
-    this.sessionData.popunderShown = true;
-    this.saveSessionData();
-
-    document.removeEventListener('click', injectPopunder);
-  };
-
-  // ⏳ انتظر أول click فقط
-  document.addEventListener('click', injectPopunder, { once: true });
-}
-
+// === 13. تحميل Popunder - مُصلح ✅ (يظهر عند أول نقرة فقط) ===
+  loadPopunder() {
+    if (!this.config.popunder?.enabled) return;
+    
+    const frequency = this.config.popunder.frequency;
+    const maxPerSession = this.config.popunder.maxPerSession || 1;
+    
+    // التحقق من عدد المرات المسموح بها
+    if (frequency === 'once_per_session') {
+      const currentCount = this.sessionData.popunderCount || 0;
+      
+      if (currentCount >= maxPerSession) {
+        console.log(`⚠️ Popunder limit reached: ${currentCount}/${maxPerSession}`);
+        return;
+      }
+    }
+    
+    // 🔥 الحل: تحميل Popunder عند أول نقرة فقط
+    let popunderTriggered = false;
+    
+    const triggerPopunder = () => {
+      if (popunderTriggered) return; // منع التكرار
+      popunderTriggered = true;
+      
+      console.log('🎯 First click detected - Loading Popunder...');
+      
+      this.config.popunder.scripts.forEach((scriptUrl, index) => {
+        // التحقق من عدم تحميل السكريبت مسبقاً
+        if (this.loadedScripts.has(scriptUrl)) {
+          console.log(`⚠️ Popunder script already loaded: ${scriptUrl}`);
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `popunder-script-${index}`;
+        
+        document.body.appendChild(script);
+        this.loadedScripts.add(scriptUrl);
+        
+        console.log(`✅ Popunder script loaded: ${scriptUrl}`);
+      });
+      
+      // تحديث العداد
+      this.sessionData.popunderCount = (this.sessionData.popunderCount || 0) + 1;
+      this.sessionData.popunderShown = true;
+      this.saveSessionData();
+      
+      console.log(`📊 Popunder triggered: ${this.sessionData.popunderCount}/${maxPerSession}`);
+      
+      // إزالة المستمعات بعد التنفيذ
+      document.removeEventListener('click', triggerPopunder);
+      document.removeEventListener('touchstart', triggerPopunder);
+    };
+    
+    // إضافة مستمعات للنقر
+    document.addEventListener('click', triggerPopunder, { once: true });
+    document.addEventListener('touchstart', triggerPopunder, { once: true });
+    
+    console.log('👆 Popunder ready - Waiting for first user click...');
+  }
   // === 14. تحميل Smartlink - مُصلح ✅ ===
   loadSmartlink() {
     if (!this.config.smartlink?.enabled) return;
