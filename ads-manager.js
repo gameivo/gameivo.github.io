@@ -861,35 +861,28 @@ setupSmartlinkPopunder() {
   console.log('✅ Smartlink Popunder جاهز - في انتظار نقرة المستخدم...');
 }
 
-// دالة جديدة: فتح Popunder
+// دالة جديدة: فتح Popunder في تاب جديد
 openSmartlinkPopunder() {
   const url = this.config.smartlink.url;
   
   try {
-    // محاولة فتح النافذة في الخلفية (Popunder)
-    const popunder = window.open(url, '_blank', 'width=1,height=1,left=0,top=0');
+    // فتح في تاب جديد كامل
+    const newTab = window.open(url, '_blank', 'noopener,noreferrer');
     
-    if (popunder) {
-      // إعادة التركيز على النافذة الحالية
-      setTimeout(() => {
-        window.focus();
-        if (typeof window.blur === 'function') {
-          popunder.blur();
-        }
-      }, 100);
-      
-      console.log('✅ تم فتح Smartlink Popunder بنجاح');
+    if (newTab) {
+      console.log('✅ تم فتح Smartlink في تاب جديد');
       return true;
     } else {
-      console.warn('⚠️ فشل فتح Popunder - ربما يوجد حاجب نوافذ منبثقة');
+      console.warn('⚠️ فشل فتح التاب - ربما يوجد حاجب نوافذ منبثقة');
+      // محاولة بديلة
+      window.open(url, '_blank');
       return false;
     }
   } catch (error) {
-    console.error('❌ خطأ في فتح Smartlink Popunder:', error);
+    console.error('❌ خطأ في فتح Smartlink:', error);
     return false;
   }
 }
-
 // دالة الطريقة القديمة (احتياطي)
 openSmartlinkDirect() {
   const frequency = this.config.smartlink.frequency;
