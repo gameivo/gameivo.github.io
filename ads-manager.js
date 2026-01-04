@@ -19,49 +19,7 @@ class AdsManager {
     this.adScalingObservers = new Map(); // لمراقبة وتحديد حجم الإعلانات
   }
 
-    // === نظام تحجيم الإعلانات الذكي ===
-  scaleAdElement(adElement) {
-    if (!adElement || !adElement.parentElement) return;
-    
-    const container = adElement.closest('[id^="ad-"]') || adElement.parentElement;
-    if (!container) return;
-    
-    const containerWidth = container.clientWidth;
-    const adWidth = adElement.offsetWidth || adElement.scrollWidth;
-    
-    if (adWidth > containerWidth && adWidth > 0) {
-      const scale = containerWidth / adWidth;
-      const scaleValue = Math.min(scale, 0.95);
-      
-      adElement.style.transform = `scale(${scaleValue})`;
-      adElement.style.transformOrigin = 'top center';
-      adElement.style.maxWidth = '100%';
-      adElement.style.overflow = 'hidden';
-      
-      console.log(`📐 تحجيم الإعلان: ${adWidth}px -> ${containerWidth}px`);
-    }
-  }
 
-  scaleAllAds() {
-    document.querySelectorAll('.ad-banner iframe, .ad-banner ins, div[id^="banner-"], div[id^="sidebar-"]')
-      .forEach(ad => this.scaleAdElement(ad));
-  }
-
-  startAdScalingSystem() {
-    console.log('📏 بدء نظام تحجيم الإعلانات...');
-    
-    const observer = new MutationObserver(() => {
-      setTimeout(() => this.scaleAllAds(), 100);
-    });
-    
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    setInterval(() => this.scaleAllAds(), 2000);
-    window.addEventListener('resize', () => this.scaleAllAds());
-  }
 
   // === 1. تحميل الإعدادات ===
   async init() {
@@ -94,10 +52,10 @@ class AdsManager {
       // تحميل جميع الإعلانات
       await this.loadAllAds();
       console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
-      this.startAdScalingSystem();
+            this.startAdScalingSystem();
       
       // بدء نظام مراقبة وتحديد حجم الإعلانات
-      this.startAdScalingSystem();
+            this.startAdScalingSystem();
       
     } catch (error) {
       console.error('❌ خطأ في تحميل الإعلانات:', error);
@@ -139,62 +97,7 @@ class AdsManager {
     setInterval(() => this.scaleAllAds(), 2000);
   }
   
-  // تحديد حجم جميع الإعلانات
-  scaleAllAds() {
-    const adWrappers = document.querySelectorAll('.ad-banner, .ad-modern-wrapper, [id^="ad-wrapper-"], [id^="banner-"], [id^="sidebar-"]');
-    adWrappers.forEach(wrapper => this.scaleAdElement(wrapper));
-  }
   
-  // تحديد حجم الإعلانات داخل عنصر
-  scaleAdsInElement(element) {
-    const adElements = element.querySelectorAll('.ad-banner, .ad-modern-wrapper, iframe, ins, [id^="banner-"], [id^="sidebar-"]');
-    adElements.forEach(ad => this.scaleAdElement(ad));
-  }
-  
-  // تحديد حجم إعلان واحد
-  scaleAdElement(adElement) {
-    if (!adElement || !adElement.parentElement) return;
-    
-    const container = adElement.closest('[id^="ad-"], .game-container, .sidebar, .main-content') || adElement.parentElement;
-    if (!container) return;
-    
-    // الحصول على أبعاد الحاوية
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight || 300; // ارتفاع افتراضي
-    
-    // الحصول على أبعاد الإعلان الحقيقية
-    const adWidth = adElement.offsetWidth || adElement.scrollWidth;
-    const adHeight = adElement.offsetHeight || adElement.scrollHeight;
-    
-    // إذا كان الإعلان أكبر من الحاوية، نقوم بتصغيره
-    if (adWidth > containerWidth && adWidth > 0) {
-      const scale = containerWidth / adWidth;
-      const scaleValue = Math.min(scale, 1); // لا نكبر الإعلان
-      
-      // تطبيق التحجيم
-      adElement.style.transform = `scale(${scaleValue})`;
-      adElement.style.transformOrigin = 'top center';
-      adElement.style.maxWidth = '100%';
-      adElement.style.overflow = 'hidden';
-      
-      // ضبط ارتفاع الحاوية لتتناسب مع الإعلان المصغر
-      if (adElement.parentElement.classList.contains('ad-banner')) {
-        adElement.parentElement.style.height = (adHeight * scaleValue + 30) + 'px';
-        adElement.parentElement.style.overflow = 'hidden';
-      }
-      
-      console.log(`📐 تحجيم الإعلان: ${adWidth}px -> ${containerWidth}px (مقياس: ${scaleValue.toFixed(2)})`);
-    } else {
-      // إعادة تعيين إذا كان الإعلان مناسباً
-      adElement.style.transform = 'none';
-      adElement.style.maxWidth = 'none';
-      
-      if (adElement.parentElement.classList.contains('ad-banner')) {
-        adElement.parentElement.style.height = 'auto';
-      }
-    }
-  }
-
   // === 2. كشف AdBlock بشكل فعال ===
   async detectAdBlockEffectively() {
     console.log('🔍 بدء كشف AdBlock...');
@@ -705,14 +608,7 @@ class AdsManager {
             }, 1000);
         };
             // تطبيق التحديد الحجم بعد تحميل الإعلان
-            setTimeout(() => {
-              const adElement = document.getElementById(`banner-${uniqueId}`);
-              if (adElement) {
-                this.scaleAdElement(adElement);
-              }
-            }, 1000);
-        };
-        
+
         script.onerror = () => {
             console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
             this.showFallbackInContainer(container);
@@ -860,14 +756,8 @@ class AdsManager {
             }, 1000);
         };
             // تطبيق التحديد الحجم بعد تحميل الإعلان
-            setTimeout(() => {
-              const adElement = document.getElementById(`sidebar-${uniqueId}`);
-              if (adElement) {
-                this.scaleAdElement(adElement);
-              }
-            }, 1000);
-        };
-        
+            
+    
         script.onerror = () => {
             console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
             this.showFallbackInContainer(container);
