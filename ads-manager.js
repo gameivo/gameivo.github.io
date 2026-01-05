@@ -523,62 +523,52 @@ class AdsManager {
 
   // === التصحيح الرئيسي: إصلاح دالة تحميل الإعلان ===
   loadSingleAd(container, ad, containerId) {
-  if (!ad || !ad.script) return;
-  
-  console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
-  
-  const uniqueId = `${ad.id}-${Date.now()}`;
-  const innerContainerId = `ad-inner-${uniqueId}`;
-  
-  // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
-  window.atOptions = window.atOptions || {};
-  Object.assign(window.atOptions, {
-      ...ad.config,
-      params: ad.config?.params || {}
-  });
-  
-  const adDiv = document.createElement('div');
-  adDiv.className = 'ad-banner';
-  adDiv.id = `ad-wrapper-${uniqueId}`;
-  adDiv.innerHTML = `
-    <div class="ad-label">Advertisement</div>
-    <div id="${innerContainerId}" class="ad-inner-container" style="
-      text-align: center;
-      min-height: ${ad.config?.height || 90}px;
-      background: transparent;
-    "></div>
-  `;
-  
-  container.innerHTML = '';
-  container.appendChild(adDiv);
-  
-  setTimeout(() => {
-      const script = document.createElement('script');
-      script.src = ad.script;
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.id = `script-${uniqueId}`;
-      
-      script.onload = () => {
-          console.log(`✅ تم تحميل إعلان: ${ad.id}`);
-          
-          // تصحيح الأبعاد بعد التحميل
-          setTimeout(() => {
-              this.fixAdDimensions(innerContainerId, ad.config?.width, ad.config?.height);
-          }, 1000);
-      };
-      
-      script.onerror = () => {
-          console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
-          this.showFallbackInContainer(container);
-      };
-      
-      const targetElement = document.getElementById(innerContainerId);
-      if (targetElement) {
-          targetElement.appendChild(script);
-      }
-  }, 300);
-}
+    if (!ad || !ad.script) return;
+    
+    console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
+    
+    const uniqueId = `${ad.id}-${Date.now()}`;
+    
+    // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
+    window.atOptions = window.atOptions || {};
+    Object.assign(window.atOptions, {
+        ...ad.config,
+        params: ad.config?.params || {}
+    });
+    
+    const adDiv = document.createElement('div');
+    adDiv.className = 'ad-banner';
+    adDiv.id = `ad-wrapper-${uniqueId}`;
+    adDiv.innerHTML = `
+      <div class="ad-label">Advertisement</div>
+      <div id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
+    `;
+    
+    container.innerHTML = '';
+    container.appendChild(adDiv);
+    
+    setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = ad.script;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `script-${uniqueId}`;
+        
+        script.onload = () => {
+            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+        };
+        
+        script.onerror = () => {
+            console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
+            this.showFallbackInContainer(container);
+        };
+        
+        const targetElement = document.getElementById(`banner-${uniqueId}`);
+        if (targetElement) {
+            targetElement.appendChild(script);
+        }
+    }, 300);
+  }
 
   // === 8. إضافة إعلان في وسط المحتوى ===
   loadMiddleAd() {
@@ -678,203 +668,47 @@ class AdsManager {
 
   // === التصحيح: دالة تحميل إعلان Sidebar ===
   loadSidebarAd(container, ad) {
-  const uniqueId = `${ad.id}-${Date.now()}`;
-  
-  // ⚠️ التصحيح: استخدام atOptions ثابت
-  window.atOptions = window.atOptions || {};
-  Object.assign(window.atOptions, {
-      ...ad.config,
-      params: ad.config?.params || {}
-  });
-  
-  const adDiv = document.createElement('div');
-  adDiv.className = 'ad-banner ad-sidebar';
-  
-  // ⚠️ **التصحيح الجديد**: إضافة حاوية داخلية للتحكم في الأبعاد
-  const innerContainerId = `ad-inner-${uniqueId}`;
-  
-  adDiv.innerHTML = `
-    <div class="ad-label">Advertisement</div>
-    <div id="${innerContainerId}" class="ad-inner-container" style="
-      text-align: center;
-      min-height: ${ad.config?.height || 300}px;
-      background: transparent;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      max-width: 100%;
-    ">
-      <!-- سيتم إدراج الإعلان هنا -->
-    </div>
-  `;
-  
-  container.innerHTML = '';
-  container.appendChild(adDiv);
-  
-  setTimeout(() => {
-      const script = document.createElement('script');
-      script.src = ad.script;
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.id = `sidebar-script-${uniqueId}`;
-      
-      script.onload = () => {
-          console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
-          
-          // ⚠️ **التصحيح الإضافي**: فحص الإعلان بعد التحميل
-          setTimeout(() => {
-              this.fixAdDimensions(innerContainerId, ad.config?.width, ad.config?.height);
-          }, 1000);
-      };
-      
-      script.onerror = () => {
-          console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
-          this.showFallbackInContainer(container);
-      };
-      
-      const targetElement = document.getElementById(innerContainerId);
-      if (targetElement) {
-          targetElement.appendChild(script);
-      }
-  }, 300);
-}
-
-  // === دالة جديدة: تصحيح أبعاد الإعلانات ===
-fixAdDimensions(containerId, expectedWidth = 300, expectedHeight = 250) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  
-  // الانتظار قليلاً للتأكد من تحميل الإعلان
-  setTimeout(() => {
-      // البحث عن عناصر الإعلان داخل الحاوية
-      const iframe = container.querySelector('iframe');
-      const img = container.querySelector('img');
-      const divAds = container.querySelector('div[id*="ad"], div[class*="ad"]');
-      
-      if (iframe) {
-          this.fixIframeAd(iframe, expectedWidth, expectedHeight);
-      } else if (img) {
-          this.fixImageAd(img, expectedWidth, expectedHeight);
-      } else if (divAds) {
-          this.fixDivAd(divAds, expectedWidth, expectedHeight);
-      } else {
-          // إذا لم يتم العثور على عنصر إعلان واضح، نتحقق من جميع العناصر
-          this.scanAndFixAllElements(container, expectedWidth, expectedHeight);
-      }
-  }, 1500);
-}
-
-fixIframeAd(iframe, expectedWidth, expectedHeight) {
-  const currentWidth = iframe.offsetWidth;
-  const currentHeight = iframe.offsetHeight;
-  
-  console.log(`📏 إطار الإعلان: ${currentWidth}x${currentHeight} (المتوقع: ${expectedWidth}x${expectedHeight})`);
-  
-  // إذا كانت الأبعاد مختلفة عن المتوقع
-  if (currentWidth !== expectedWidth || currentHeight !== expectedHeight) {
-      // التحقق من أن الإطار ليس فارغاً
-      if (currentWidth > 0 && currentHeight > 0) {
-          // حساب نسبة التكبير/التصغير
-          const widthRatio = expectedWidth / currentWidth;
-          const heightRatio = expectedHeight / currentHeight;
-          const scale = Math.min(widthRatio, heightRatio);
-          
-          if (scale < 0.9 || scale > 1.1) {
-              console.log(`🔧 تصحيح حجم الإعلان: تحجيم ${scale.toFixed(2)}x`);
-              
-              // تطبيق التحجيم
-              iframe.style.transform = `scale(${scale})`;
-              iframe.style.transformOrigin = 'center center';
-              iframe.style.maxWidth = '100%';
-              iframe.style.maxHeight = '100%';
-              
-              // تعديل الحاوية الأم
-              const parent = iframe.parentElement;
-              if (parent && parent.classList.contains('ad-inner-container')) {
-                  parent.style.overflow = 'hidden';
-                  parent.style.display = 'flex';
-                  parent.style.alignItems = 'center';
-                  parent.style.justifyContent = 'center';
-              }
-          }
-      }
+    const uniqueId = `${ad.id}-${Date.now()}`;
+    
+    // ⚠️ التصحيح: استخدام atOptions ثابت
+    window.atOptions = window.atOptions || {};
+    Object.assign(window.atOptions, {
+        ...ad.config,
+        params: ad.config?.params || {}
+    });
+    
+    const adDiv = document.createElement('div');
+    adDiv.className = 'ad-banner ad-sidebar';
+    adDiv.innerHTML = `
+      <div class="ad-label">Advertisement</div>
+      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 300}px;background:transparent;"></div>
+    `;
+    
+    container.innerHTML = '';
+    container.appendChild(adDiv);
+    
+    setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = ad.script;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `sidebar-script-${uniqueId}`;
+        
+        script.onload = () => {
+            console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
+        };
+        
+        script.onerror = () => {
+            console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
+            this.showFallbackInContainer(container);
+        };
+        
+        const targetElement = document.getElementById(`sidebar-${uniqueId}`);
+        if (targetElement) {
+            targetElement.appendChild(script);
+        }
+    }, 300);
   }
-}
-
-fixImageAd(img, expectedWidth, expectedHeight) {
-  const naturalWidth = img.naturalWidth;
-  const naturalHeight = img.naturalHeight;
-  
-  if (naturalWidth > 0 && naturalHeight > 0) {
-      const widthRatio = expectedWidth / naturalWidth;
-      const heightRatio = expectedHeight / naturalHeight;
-      const scale = Math.min(widthRatio, heightRatio, 1); // لا تكبير أكثر من 100%
-      
-      if (scale < 0.8) {
-          img.style.maxWidth = `${naturalWidth * scale}px`;
-          img.style.maxHeight = `${naturalHeight * scale}px`;
-          img.style.width = 'auto';
-          img.style.height = 'auto';
-          img.style.margin = 'auto';
-          img.style.display = 'block';
-      }
-  }
-}
-
-fixDivAd(div, expectedWidth, expectedHeight) {
-  const currentWidth = div.offsetWidth;
-  const currentHeight = div.offsetHeight;
-  
-  if (currentWidth > expectedWidth * 1.2 || currentHeight > expectedHeight * 1.2) {
-      const scaleX = expectedWidth / currentWidth;
-      const scaleY = expectedHeight / currentHeight;
-      const scale = Math.min(scaleX, scaleY);
-      
-      if (scale < 0.9) {
-          div.style.transform = `scale(${scale})`;
-          div.style.transformOrigin = 'top left';
-          div.style.width = `${currentWidth}px`;
-          div.style.height = `${currentHeight}px`;
-      }
-  }
-}
-
-scanAndFixAllElements(container, expectedWidth, expectedHeight) {
-  // الحصول على جميع العناصر داخل الحاوية
-  const elements = container.querySelectorAll('*');
-  
-  elements.forEach(element => {
-      const tagName = element.tagName.toLowerCase();
-      const styles = window.getComputedStyle(element);
-      
-      // تجاهل العناصر المخفية أو الصغيرة
-      if (styles.display === 'none' || 
-          styles.visibility === 'hidden' || 
-          styles.opacity === '0' ||
-          element.offsetWidth < 10 ||
-          element.offsetHeight < 10) {
-          return;
-      }
-      
-      // التحقق من العناصر الكبيرة التي قد تكون إعلانات
-      const width = element.offsetWidth;
-      const height = element.offsetHeight;
-      
-      if (width > 100 && height > 50) {
-          console.log(`🔍 عنصر مشبوه: ${tagName} ${width}x${height}`);
-          
-          // إذا كان العنصر أكبر بكثير من المتوقع
-          if (width > expectedWidth * 1.5 || height > expectedHeight * 1.5) {
-              // تطبيق حدود قصوى
-              element.style.maxWidth = `${expectedWidth}px`;
-              element.style.maxHeight = `${expectedHeight}px`;
-              element.style.overflow = 'hidden';
-          }
-      }
-  });
-}
 
   // === 12. تحميل Social Bar ===
   loadSocialBar() {
@@ -1426,58 +1260,31 @@ document.addEventListener('DOMContentLoaded', () => {
         margin: 10px 0;
       }
     }
+    
+    /* تصحيح عرض الإعلانات الكبيرة في السايدبار */
+    #ad-sidebar .ad-banner,
+    #ad-sidebar-extra .ad-banner {
+      overflow: hidden !important;
+      max-width: 300px !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+    
+    #ad-sidebar iframe,
+    #ad-sidebar-extra iframe {
+      max-width: 100% !important;
+      max-height: 300px !important;
+    }
+    
+    /* حاوية الإعلان الأساسية */
+    .ad-banner > div[id^="banner-"],
+    .ad-banner > div[id^="sidebar-"] {
+      overflow: hidden !important;
+      position: relative !important;
+      min-height: 50px !important;
+    }
   `;
   document.head.appendChild(style);
-
-      /* أنماط جديدة لتصحيح أبعاد الإعلانات */
-    .ad-inner-container {
-      position: relative;
-      overflow: hidden !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      max-width: 100% !important;
-      min-height: 250px !important;
-    }
-
-    .ad-inner-container iframe {
-      max-width: 100% !important;
-      max-height: 100% !important;
-      border: none !important;
-    }
-
-    /* تحجيم الإعلانات الكبيرة */
-    .ad-inner-container > * {
-      max-width: 100% !important;
-      max-height: 100% !important;
-      object-fit: contain !important;
-    }
-
-    /* حاوية إعلانات Sidebar خاصة */
-    #ad-sidebar .ad-inner-container {
-      min-height: 300px !important;
-    }
-
-    #ad-sidebar-extra .ad-inner-container {
-      min-height: 250px !important;
-    }
-
-    /* حاوية الإعلان فوق وتحت iframe */
-    #ad-above-iframe .ad-inner-container,
-    #ad-below-iframe .ad-inner-container {
-      min-height: 90px !important;
-    }
-
-    /* إصلاح عرض الإعلانات الطويلة */
-    @media (max-width: 768px) {
-      .ad-inner-container {
-        min-height: 200px !important;
-      }
-      
-      #ad-sidebar .ad-inner-container {
-        min-height: 250px !important;
-      }
-    }
   
   console.log('🎨 تم تحميل أنماط الإعلانات');
 });
