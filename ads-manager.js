@@ -523,59 +523,94 @@ const hasAdBlock = failures >= 3; // 🔒 فقط إذا فشلت كلها
   }
 
   // === التصحيح الرئيسي: إصلاح دالة تحميل الإعلان ===
-  loadSingleAd(container, ad, containerId) {
-    if (!ad || !ad.script) return;
-    
-    console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
-    
-    const uniqueId = `${ad.id}-${Date.now()}`;
-    
-    // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
-    const atScript = document.createElement('script');
-atScript.innerHTML = `var atOptions = ${JSON.stringify(ad.config)};`;
-targetElement.appendChild(atScript);
+ // ========== loadSingleAd ==========
+loadSingleAd(container, ad, containerId) {
+  if (!ad || !ad.script) return;
+
+  console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
+  const uniqueId = `${ad.id}-${Date.now()}`;
+
+  // ✅ تهيئة atOptions بشكل صحيح
+  window.atOptions = { ...(window.atOptions || {}), ...ad.config };
+
+  const adDiv = document.createElement('div');
+  adDiv.className = 'ad-banner';
+  adDiv.id = `ad-wrapper-${uniqueId}`;
+  adDiv.innerHTML = `
+    <div class="ad-label">Advertisement</div>
+    <div id="banner-${uniqueId}"
+         style="width:${ad.config?.width||300}px;
+                height:${ad.config?.height||250}px;
+                margin:0 auto;
+                overflow:hidden;
+                display:flex;align-items:center;justify-content:center;background:transparent;">
+    </div>`;
+
+  container.innerHTML = '';
+  container.appendChild(adDiv);
+
+  // ✅ الخطوة الأخيرة: تحميل السكريبت الخارجي
+  setTimeout(() => {
+    const targetElement = document.getElementById(`banner-${uniqueId}`);
+    if (!targetElement) return;
 
     const script = document.createElement('script');
-script.src = ad.script;
-script.async = true;
-script.setAttribute('data-cfasync', 'false');
-targetElement.appendChild(script);
+    script.src = ad.script;
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    script.id = `script-${uniqueId}`;
 
-    
-    const adDiv = document.createElement('div');
-    adDiv.className = 'ad-banner';
-    adDiv.id = `ad-wrapper-${uniqueId}`;
-    adDiv.innerHTML = `
-      <div class="ad-label">Advertisement</div>
-      <div id="banner-${uniqueId}"       style="        width:${ad.config?.width || 300}px;        height:${ad.config?.height || 250}px;        margin:0 auto;        overflow:hidden;        display:flex;        align-items:center;        justify-content:center;        background:transparent;      "> </div>
-    `;
-    
-    container.innerHTML = '';
-    container.appendChild(adDiv);
-    
-    setTimeout(() => {
-        const script = document.createElement('script');
-        script.src = ad.script;
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        script.id = `script-${uniqueId}`;
-        
-        script.onload = () => {
-            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
-        };
-        
-        script.onerror = () => {
-            console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
-            this.showFallbackInContainer(container);
-        };
-        
-        const targetElement = document.getElementById(`banner-${uniqueId}`);
-        if (targetElement) {
-            targetElement.appendChild(script);
-        }
-    }, 300);
-  }
+    script.onload  = () => console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+    script.onerror = () => {
+      console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
+      this.showFallbackInContainer(container);
+    };
 
+    targetElement.appendChild(script);
+  }, 300);
+}
+
+// ========== loadSidebarAd ==========
+loadSidebarAd(container, ad) {
+  const uniqueId = `${ad.id}-${Date.now()}`;
+
+  // نفس التهيئة
+  window.atOptions = { ...(window.atOptions || {}), ...ad.config };
+
+  const adDiv = document.createElement('div');
+  adDiv.className = 'ad-banner ad-sidebar';
+  adDiv.innerHTML = `
+    <div class="ad-label">Advertisement</div>
+    <div id="sidebar-${uniqueId}"
+         style="width:${ad.config?.width||300}px;
+                height:${ad.config?.height||250}px;
+                margin:0 auto;
+                overflow:hidden;
+                display:flex;align-items:center;justify-content:center;background:transparent;">
+    </div>`;
+
+  container.innerHTML = '';
+  container.appendChild(adDiv);
+
+  setTimeout(() => {
+    const targetElement = document.getElementById(`sidebar-${uniqueId}`);
+    if (!targetElement) return;
+
+    const script = document.createElement('script');
+    script.src = ad.script;
+    script.async = true;
+    script.setAttribute('data-cfasync', 'false');
+    script.id = `sidebar-script-${uniqueId}`;
+
+    script.onload  = () => console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
+    script.onerror = () => {
+      console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
+      this.showFallbackInContainer(container);
+    };
+
+    targetElement.appendChild(script);
+  }, 300);
+}
   // === 8. إضافة إعلان في وسط المحتوى ===
   loadMiddleAd() {
     if (!this.config.banners?.pageMiddle?.enabled) return;
