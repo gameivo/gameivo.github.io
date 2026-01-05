@@ -69,7 +69,8 @@ class AdsManager {
     console.log('📊 Test 3 - Fetch Test:', test3 ? 'BLOCKED' : 'PASSED');
     
     const failures = [test1, test2, test3].filter(Boolean).length;
-    const hasAdBlock = failures >= 2;
+const hasAdBlock = failures >= 3; // 🔒 فقط إذا فشلت كلها
+
     
     console.log('📊 النتيجة النهائية:', hasAdBlock ? '🚫 ADBLOCK DETECTED' : '✅ NO ADBLOCK');
     this.isAdBlockDetected = hasAdBlock;
@@ -530,11 +531,16 @@ class AdsManager {
     const uniqueId = `${ad.id}-${Date.now()}`;
     
     // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
-    window.atOptions = window.atOptions || {};
-    Object.assign(window.atOptions, {
-        ...ad.config,
-        params: ad.config?.params || {}
-    });
+    const atScript = document.createElement('script');
+atScript.innerHTML = `var atOptions = ${JSON.stringify(ad.config)};`;
+targetElement.appendChild(atScript);
+
+    const script = document.createElement('script');
+script.src = ad.script;
+script.async = true;
+script.setAttribute('data-cfasync', 'false');
+targetElement.appendChild(script);
+
     
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner';
@@ -1173,7 +1179,7 @@ style.textContent = `
     border: 1px solid rgba(255,255,255,0.1);
     transition: all 0.3s ease;
     min-height: 50px;
-    overflow: hidden !important; /* 🔒 مهم */
+    overflow: visible !important; /* 🔒 مهم */
   }
 
   /* 🔒 قفل مقاس البانرات ومنع التشويه */
