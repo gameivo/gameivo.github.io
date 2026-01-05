@@ -1284,6 +1284,96 @@ document.addEventListener('DOMContentLoaded', () => {
       min-height: 50px !important;
     }
   `;
+      /* === تصحيح الصور الكبيرة في الإعلانات === */
+    
+    /* تصحيح جميع الصور داخل الإعلانات */
+    .ad-banner img,
+    #ad-sidebar img,
+    #ad-sidebar-extra img,
+    .ad-banner > div[id^="banner-"] img,
+    .ad-banner > div[id^="sidebar-"] img {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+      height: auto !important;
+      object-fit: contain !important;
+      display: block !important;
+      margin: 0 auto !important;
+    }
+    
+    /* حاوية خاصة للصور في السايدبار */
+    #ad-sidebar .ad-banner,
+    #ad-sidebar-extra .ad-banner {
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    /* حاوية الإعلان الداخلية في السايدبار */
+    #ad-sidebar .ad-banner > div[id^="sidebar-"],
+    #ad-sidebar-extra .ad-banner > div[id^="banner-"] {
+      width: 100% !important;
+      height: 300px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+    }
+    
+    /* تصحيح الصور المحددة بالأبعاد */
+    .ad-banner img[width],
+    .ad-banner img[height] {
+      max-width: min(100%, attr(width px)) !important;
+      max-height: min(100%, attr(height px)) !important;
+    }
+    
+    /* إعلانات السايدبار المربعة */
+    #ad-sidebar .ad-banner:has(img),
+    #ad-sidebar-extra .ad-banner:has(img) {
+      min-height: 300px !important;
+      max-height: 300px !important;
+    }
+    
+    /* حماية من الصور الضخمة */
+    .ad-banner img:is([width="728"], [width="970"], [width="1200"]) {
+      transform: scale(0.5) !important;
+      transform-origin: center center !important;
+    }
+    
+    /* إطار احتياطي للصور الكبيرة جداً */
+    .ad-banner:has(img[width="300"][height="600"]),
+    .ad-banner:has(img[width="300"][height="250"]) {
+      height: 300px !important;
+    }
+    
+    /* تحسين للجوال */
+    @media (max-width: 768px) {
+      #ad-sidebar .ad-banner,
+      #ad-sidebar-extra .ad-banner {
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 250px !important;
+      }
+      
+      #ad-sidebar .ad-banner img,
+      #ad-sidebar-extra .ad-banner img {
+        max-height: 250px !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      #ad-sidebar .ad-banner,
+      #ad-sidebar-extra .ad-banner {
+        min-height: 200px !important;
+      }
+      
+      #ad-sidebar .ad-banner img,
+      #ad-sidebar-extra .ad-banner img {
+        max-height: 200px !important;
+      }
+    }
   document.head.appendChild(style);
   
   console.log('🎨 تم تحميل أنماط الإعلانات');
