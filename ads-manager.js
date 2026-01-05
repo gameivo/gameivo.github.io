@@ -541,7 +541,7 @@ class AdsManager {
     adDiv.id = `ad-wrapper-${uniqueId}`;
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
+      <div id="banner-${uniqueId}"       style="        width:${ad.config?.width || 300}px;        height:${ad.config?.height || 250}px;        margin:0 auto;        overflow:hidden;        display:flex;        align-items:center;        justify-content:center;        background:transparent;      "> </div>
     `;
     
     container.innerHTML = '';
@@ -681,7 +681,7 @@ class AdsManager {
     adDiv.className = 'ad-banner ad-sidebar';
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="sidebar-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 300}px;background:transparent;"></div>
+      <div id="sidebar-${uniqueId}"      style="        width:${ad.config?.width || 300}px;        height:${ad.config?.height || 250}px;        margin:0 auto;        overflow:hidden;        display:flex;        align-items:center;        justify-content:center;        background:transparent;      "> </div>
     `;
     
     container.innerHTML = '';
@@ -1160,108 +1160,117 @@ document.addEventListener('DOMContentLoaded', () => {
   adsManager.init();
   window.adsManager = adsManager;
   
-  // إضافة أنماط CSS محسنة
-  const style = document.createElement('style');
-  style.textContent = `
+// إضافة أنماط CSS محسنة
+const style = document.createElement('style');
+style.textContent = `
+  .ad-banner {
+    background: rgba(0,0,0,0.7);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    position: relative;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    min-height: 50px;
+    overflow: hidden !important; /* 🔒 مهم */
+  }
+
+  /* 🔒 قفل مقاس البانرات ومنع التشويه */
+  .ad-banner iframe,
+  .ad-banner img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .ad-banner:hover {
+    border-color: rgba(255,255,255,0.3);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  .ad-label {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    z-index: 10;
+  }
+
+  .ad-sidebar {
+    position: sticky;
+    top: 100px;
+    margin-bottom: 20px;
+  }
+
+  .native-ad-banner {
+    background: linear-gradient(135deg, rgba(26,42,108,0.8), rgba(178,31,31,0.8));
+  }
+
+  #ad-above-iframe {
+    margin-bottom: 15px;
+  }
+
+  #ad-below-iframe {
+    margin-top: 15px;
+    margin-bottom: 25px;
+  }
+
+  #ad-page-bottom {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  #ad-page-middle {
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  #ad-sidebar-extra {
+    margin-top: 20px;
+  }
+
+  body.adblock-blocked > *:not(#adblock-block-overlay) {
+    pointer-events: none !important;
+    opacity: 0.3;
+    filter: blur(2px);
+  }
+
+  #adblock-block-overlay,
+  #adblock-block-overlay * {
+    filter: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  @media (max-width: 768px) {
     .ad-banner {
-      background: rgba(0,0,0,0.7);
-      border-radius: 8px;
-      padding: 15px;
-      margin: 20px 0;
-      position: relative;
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.3s ease;
-      min-height: 50px;
+      padding: 10px;
+      margin: 15px 0;
     }
-    
-    .ad-banner:hover {
-      border-color: rgba(255,255,255,0.3);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    .ad-label {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.6);
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      z-index: 10;
-    }
-    
     .ad-sidebar {
-      position: sticky;
-      top: 100px;
-      margin-bottom: 20px;
+      position: static;
     }
-    
-    .native-ad-banner {
-      background: linear-gradient(135deg, rgba(26,42,108,0.8), rgba(178,31,31,0.8));
+  }
+
+  @media (max-width: 480px) {
+    .ad-banner {
+      padding: 8px;
+      margin: 10px 0;
     }
-    
-    #ad-above-iframe {
-      margin-bottom: 15px;
-    }
-    
-    #ad-below-iframe {
-      margin-top: 15px;
-      margin-bottom: 25px;
-    }
-    
-    #ad-page-bottom {
-      margin-top: 30px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    
-    #ad-page-middle {
-      margin: 25px 0;
-      text-align: center;
-    }
-    
-    #ad-sidebar-extra {
-      margin-top: 20px;
-    }
-    
-    body.adblock-blocked > *:not(#adblock-block-overlay) {
-      pointer-events: none !important;
-      opacity: 0.3;
-      filter: blur(2px);
-    }
-    
-    #adblock-block-overlay,
-    #adblock-block-overlay * {
-      filter: none !important;
-      opacity: 1 !important;
-      pointer-events: auto !important;
-    }
-    
-    /* تحسين العرض على الأجهزة المحمولة */
-    @media (max-width: 768px) {
-      .ad-banner {
-        padding: 10px;
-        margin: 15px 0;
-      }
-      
-      .ad-sidebar {
-        position: static;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .ad-banner {
-        padding: 8px;
-        margin: 10px 0;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-  
-  console.log('🎨 تم تحميل أنماط الإعلانات');
-});
+  }
+`;
+document.head.appendChild(style);
+
+console.log('🎨 تم تحميل أنماط الإعلانات');
