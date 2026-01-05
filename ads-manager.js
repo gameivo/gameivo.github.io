@@ -1283,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
       position: relative !important;
       min-height: 50px !important;
     }
-  `;
+  
       /* === تصحيح الصور الكبيرة في الإعلانات === */
     
        /* === الحل القوي لمشكلة الصور الكبيرة === */
@@ -1361,6 +1361,7 @@ document.addEventListener('DOMContentLoaded', () => {
       max-width: min(100%, attr(width px, 300px)) !important;
       max-height: min(100%, attr(height px, 300px)) !important;
     }
+    `;
   document.head.appendChild(style);
   
   console.log('🎨 تم تحميل أنماط الإعلانات');
