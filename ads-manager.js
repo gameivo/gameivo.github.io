@@ -69,8 +69,7 @@ class AdsManager {
     console.log('📊 Test 3 - Fetch Test:', test3 ? 'BLOCKED' : 'PASSED');
     
     const failures = [test1, test2, test3].filter(Boolean).length;
-const hasAdBlock = failures >= 3; // 🔒 فقط إذا فشلت كلها
-
+    const hasAdBlock = failures >= 2;
     
     console.log('📊 النتيجة النهائية:', hasAdBlock ? '🚫 ADBLOCK DETECTED' : '✅ NO ADBLOCK');
     this.isAdBlockDetected = hasAdBlock;
@@ -523,94 +522,54 @@ const hasAdBlock = failures >= 3; // 🔒 فقط إذا فشلت كلها
   }
 
   // === التصحيح الرئيسي: إصلاح دالة تحميل الإعلان ===
- // ========== loadSingleAd ==========
-loadSingleAd(container, ad, containerId) {
-  if (!ad || !ad.script) return;
+  loadSingleAd(container, ad, containerId) {
+    if (!ad || !ad.script) return;
+    
+    console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
+    
+    const uniqueId = `${ad.id}-${Date.now()}`;
+    
+    // ⚠️ التصحيح: استخدام atOptions ثابت بدلاً من أسماء متغيرة
+    window.atOptions = window.atOptions || {};
+    Object.assign(window.atOptions, {
+        ...ad.config,
+        params: ad.config?.params || {}
+    });
+    
+    const adDiv = document.createElement('div');
+    adDiv.className = 'ad-banner';
+    adDiv.id = `ad-wrapper-${uniqueId}`;
+    adDiv.innerHTML = `
+      <div class="ad-label">Advertisement</div>
+      <div id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
+    `;
+    
+    container.innerHTML = '';
+    container.appendChild(adDiv);
+    
+    setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = ad.script;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `script-${uniqueId}`;
+        
+        script.onload = () => {
+            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+        };
+        
+        script.onerror = () => {
+            console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
+            this.showFallbackInContainer(container);
+        };
+        
+        const targetElement = document.getElementById(`banner-${uniqueId}`);
+        if (targetElement) {
+            targetElement.appendChild(script);
+        }
+    }, 300);
+  }
 
-  console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
-  const uniqueId = `${ad.id}-${Date.now()}`;
-
-  // ✅ تهيئة atOptions بشكل صحيح
-  window.atOptions = { ...(window.atOptions || {}), ...ad.config };
-
-  const adDiv = document.createElement('div');
-  adDiv.className = 'ad-banner';
-  adDiv.id = `ad-wrapper-${uniqueId}`;
-  adDiv.innerHTML = `
-    <div class="ad-label">Advertisement</div>
-    <div id="banner-${uniqueId}"
-         style="width:${ad.config?.width||300}px;
-                height:${ad.config?.height||250}px;
-                margin:0 auto;
-                overflow:hidden;
-                display:flex;align-items:center;justify-content:center;background:transparent;">
-    </div>`;
-
-  container.innerHTML = '';
-  container.appendChild(adDiv);
-
-  // ✅ الخطوة الأخيرة: تحميل السكريبت الخارجي
-  setTimeout(() => {
-    const targetElement = document.getElementById(`banner-${uniqueId}`);
-    if (!targetElement) return;
-
-    const script = document.createElement('script');
-    script.src = ad.script;
-    script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-    script.id = `script-${uniqueId}`;
-
-    script.onload  = () => console.log(`✅ تم تحميل إعلان: ${ad.id}`);
-    script.onerror = () => {
-      console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
-      this.showFallbackInContainer(container);
-    };
-
-    targetElement.appendChild(script);
-  }, 300);
-}
-
-// ========== loadSidebarAd ==========
-loadSidebarAd(container, ad) {
-  const uniqueId = `${ad.id}-${Date.now()}`;
-
-  // نفس التهيئة
-  window.atOptions = { ...(window.atOptions || {}), ...ad.config };
-
-  const adDiv = document.createElement('div');
-  adDiv.className = 'ad-banner ad-sidebar';
-  adDiv.innerHTML = `
-    <div class="ad-label">Advertisement</div>
-    <div id="sidebar-${uniqueId}"
-         style="width:${ad.config?.width||300}px;
-                height:${ad.config?.height||250}px;
-                margin:0 auto;
-                overflow:hidden;
-                display:flex;align-items:center;justify-content:center;background:transparent;">
-    </div>`;
-
-  container.innerHTML = '';
-  container.appendChild(adDiv);
-
-  setTimeout(() => {
-    const targetElement = document.getElementById(`sidebar-${uniqueId}`);
-    if (!targetElement) return;
-
-    const script = document.createElement('script');
-    script.src = ad.script;
-    script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-    script.id = `sidebar-script-${uniqueId}`;
-
-    script.onload  = () => console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
-    script.onerror = () => {
-      console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
-      this.showFallbackInContainer(container);
-    };
-
-    targetElement.appendChild(script);
-  }, 300);
-}
   // === 8. إضافة إعلان في وسط المحتوى ===
   loadMiddleAd() {
     if (!this.config.banners?.pageMiddle?.enabled) return;
@@ -711,18 +670,34 @@ loadSidebarAd(container, ad) {
   loadSidebarAd(container, ad) {
     const uniqueId = `${ad.id}-${Date.now()}`;
     
-    // ⚠️ التصحيح: استخدام atOptions ثابت
+    // ✅ التصحيح: استخدام atOptions ثابت
     window.atOptions = window.atOptions || {};
     Object.assign(window.atOptions, {
         ...ad.config,
         params: ad.config?.params || {}
     });
     
+    // ✅ جديد: تحديد الأبعاد المتوقعة
+    const expectedWidth = ad.config?.width || 300;
+    const expectedHeight = ad.config?.height || 250;
+    
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner ad-sidebar';
     adDiv.innerHTML = `
       <div class="ad-label">Advertisement</div>
-      <div id="sidebar-${uniqueId}"      style="        width:${ad.config?.width || 300}px;        height:${ad.config?.height || 250}px;        margin:0 auto;        overflow:hidden;        display:flex;        align-items:center;        justify-content:center;        background:transparent;      "> </div>
+      <div id="sidebar-${uniqueId}" style="
+        text-align:center;
+        width:${expectedWidth}px;
+        height:${expectedHeight}px;
+        min-height:${expectedHeight}px;
+        max-width:100%;
+        background:transparent;
+        overflow:hidden;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        margin:0 auto;
+      "></div>
     `;
     
     container.innerHTML = '';
@@ -1201,117 +1176,146 @@ document.addEventListener('DOMContentLoaded', () => {
   adsManager.init();
   window.adsManager = adsManager;
   
-// إضافة أنماط CSS محسنة
-const style = document.createElement('style');
-style.textContent = `
-  .ad-banner {
-    background: rgba(0,0,0,0.7);
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px 0;
-    position: relative;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: all 0.3s ease;
-    min-height: 50px;
-    overflow: visible !important; /* 🔒 مهم */
-  }
-
-  /* 🔒 قفل مقاس البانرات ومنع التشويه */
-  .ad-banner iframe,
-  .ad-banner img {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    width: auto !important;
-    height: auto !important;
-    display: block;
-    margin: 0 auto;
-  }
-
-  .ad-banner:hover {
-    border-color: rgba(255,255,255,0.3);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  }
-
-  .ad-label {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.6);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    z-index: 10;
-  }
-
-  .ad-sidebar {
-    position: sticky;
-    top: 100px;
-    margin-bottom: 20px;
-  }
-
-  .native-ad-banner {
-    background: linear-gradient(135deg, rgba(26,42,108,0.8), rgba(178,31,31,0.8));
-  }
-
-  #ad-above-iframe {
-    margin-bottom: 15px;
-  }
-
-  #ad-below-iframe {
-    margin-top: 15px;
-    margin-bottom: 25px;
-  }
-
-  #ad-page-bottom {
-    margin-top: 30px;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-
-  #ad-page-middle {
-    margin: 25px 0;
-    text-align: center;
-  }
-
-  #ad-sidebar-extra {
-    margin-top: 20px;
-  }
-
-  body.adblock-blocked > *:not(#adblock-block-overlay) {
-    pointer-events: none !important;
-    opacity: 0.3;
-    filter: blur(2px);
-  }
-
-  #adblock-block-overlay,
-  #adblock-block-overlay * {
-    filter: none !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-
-  @media (max-width: 768px) {
+  // إضافة أنماط CSS محسنة
+  const style = document.createElement('style');
+  style.textContent = `
     .ad-banner {
-      padding: 10px;
-      margin: 15px 0;
+      background: rgba(0,0,0,0.7);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      position: relative;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+      min-height: 50px;
     }
+    
+    .ad-banner:hover {
+      border-color: rgba(255,255,255,0.3);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .ad-label {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+    
     .ad-sidebar {
-      position: static;
+      position: sticky;
+      top: 100px;
+      margin-bottom: 20px;
+      max-width: 100%;
+      overflow: hidden;
     }
-  }
-
-  @media (max-width: 480px) {
-    .ad-banner {
-      padding: 8px;
-      margin: 10px 0;
+    
+    .ad-sidebar iframe,
+    .ad-sidebar > div {
+      max-width: 100% !important;
+      height: auto !important;
+      object-fit: contain;
     }
-  }
-`;
-document.head.appendChild(style);
-
-console.log('🎨 تم تحميل أنماط الإعلانات');
+    
+    /* إصلاح الإعلانات التي تتجاوز الحاوية */
+    .ad-banner > div > iframe {
+      max-width: 100% !important;
+      max-height: 100% !important;
+      object-fit: scale-down;
+    }
+    
+    .native-ad-banner {
+      background: linear-gradient(135deg, rgba(26,42,108,0.8), rgba(178,31,31,0.8));
+    }
+    
+    #ad-above-iframe {
+      margin-bottom: 15px;
+    }
+    
+    #ad-below-iframe {
+      margin-top: 15px;
+      margin-bottom: 25px;
+    }
+    
+    #ad-page-bottom {
+      margin-top: 30px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    #ad-page-middle {
+      margin: 25px 0;
+      text-align: center;
+    }
+    
+    #ad-sidebar-extra {
+      margin-top: 20px;
+    }
+    
+    /* ✅ إصلاح إعلانات Sidebar المشوهة */
+    #ad-sidebar,
+    #ad-sidebar-extra {
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    #ad-sidebar > .ad-banner,
+    #ad-sidebar-extra > .ad-banner {
+      width: 100%;
+      max-width: 300px;
+      overflow: hidden;
+    }
+    
+    /* منع الإعلانات الأفقية من التشوه */
+    [id^="sidebar-"] iframe {
+      transform-origin: center center;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    
+    body.adblock-blocked > *:not(#adblock-block-overlay) {
+      pointer-events: none !important;
+      opacity: 0.3;
+      filter: blur(2px);
+    }
+    
+    #adblock-block-overlay,
+    #adblock-block-overlay * {
+      filter: none !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+    
+    /* تحسين العرض على الأجهزة المحمولة */
+    @media (max-width: 768px) {
+      .ad-banner {
+        padding: 10px;
+        margin: 15px 0;
+      }
+      
+      .ad-sidebar {
+        position: static;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .ad-banner {
+        padding: 8px;
+        margin: 10px 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  console.log('🎨 تم تحميل أنماط الإعلانات');
+});
