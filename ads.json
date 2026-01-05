@@ -261,7 +261,7 @@
   },
   
   "smartlink": {
-  "enabled": true,
+  "enabled": false,
   "url": "https://www.effectivegatecpm.com/chp2ch8k1?key=82481be5d622d93cd10096e789662cb4",
   "mode": "popunder",
   "triggerOnClick": true,
