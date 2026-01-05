@@ -577,11 +577,10 @@ class AdsManager {
     const uniqueId = `${ad.id}-${Date.now()}`;
     
     // استخدام atOptions ثابت
-    window.atOptions = window.atOptions || {};
-    Object.assign(window.atOptions, {
-        ...ad.config,
-        params: ad.config?.params || {}
-    });
+    window.atOptions = {
+    ...ad.config,
+    params: ad.config?.params || {}
+};
     
     // استخدام هيكل HTML محسن
     const adDiv = document.createElement('div');
@@ -726,11 +725,10 @@ class AdsManager {
     const uniqueId = `${ad.id}-${Date.now()}`;
     
     // استخدام atOptions ثابت
-    window.atOptions = window.atOptions || {};
-    Object.assign(window.atOptions, {
-        ...ad.config,
-        params: ad.config?.params || {}
-    });
+    window.atOptions = {
+    ...ad.config,
+    params: ad.config?.params || {}
+};
     
     const adDiv = document.createElement('div');
     adDiv.className = 'ad-banner ad-sidebar ad-modern-wrapper';
