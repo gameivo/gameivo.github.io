@@ -667,65 +667,134 @@ class AdsManager {
   }
 
   // === التصحيح: دالة تحميل إعلان Sidebar ===
-  loadSidebarAd(container, ad) {
-    const uniqueId = `${ad.id}-${Date.now()}`;
-    
-    // ✅ التصحيح: استخدام atOptions ثابت
-    window.atOptions = window.atOptions || {};
-    Object.assign(window.atOptions, {
-        ...ad.config,
-        params: ad.config?.params || {}
-    });
-    
-    // ✅ جديد: تحديد الأبعاد المتوقعة
-    const expectedWidth = ad.config?.width || 300;
-    const expectedHeight = ad.config?.height || 250;
-    
-    const adDiv = document.createElement('div');
-    adDiv.className = 'ad-banner ad-sidebar';
-    adDiv.innerHTML = `
-      <div class="ad-label">Advertisement</div>
-      <div id="sidebar-${uniqueId}" style="
-        text-align:center;
-        width:${expectedWidth}px;
-        height:${expectedHeight}px;
-        min-height:${expectedHeight}px;
-        max-width:100%;
-        background:transparent;
-        overflow:hidden;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        margin:0 auto;
-      "></div>
-    `;
-    
-    container.innerHTML = '';
-    container.appendChild(adDiv);
-    
-    setTimeout(() => {
-        const script = document.createElement('script');
-        script.src = ad.script;
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        script.id = `sidebar-script-${uniqueId}`;
-        
-        script.onload = () => {
-            console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
-        };
-        
-        script.onerror = () => {
-            console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
-            this.showFallbackInContainer(container);
-        };
-        
-        const targetElement = document.getElementById(`sidebar-${uniqueId}`);
-        if (targetElement) {
-            targetElement.appendChild(script);
-        }
-    }, 300);
-  }
+  // === التصحيح النهائي: دالة تحميل إعلان Sidebar ===
+loadSidebarAd(container, ad) {
+  const uniqueId = `${ad.id}-${Date.now()}`;
+  
+  // ✅ استخدام atOptions ثابت
+  window.atOptions = window.atOptions || {};
+  Object.assign(window.atOptions, {
+      ...ad.config,
+      params: ad.config?.params || {}
+  });
+  
+  // ✅ تحديد الأبعاد المتوقعة
+  const expectedWidth = ad.config?.width || 300;
+  const expectedHeight = ad.config?.height || 250;
+  
+  const adDiv = document.createElement('div');
+  adDiv.className = 'ad-banner ad-sidebar';
+  adDiv.style.cssText = `
+    width: 100%;
+    max-width: ${expectedWidth}px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+  `;
+  
+  adDiv.innerHTML = `
+    <div class="ad-label">Advertisement</div>
+    <div id="sidebar-${uniqueId}" class="ad-content-wrapper" style="
+      text-align: center;
+      width: ${expectedWidth}px;
+      height: ${expectedHeight}px;
+      max-width: 100%;
+      background: transparent;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      position: relative;
+    "></div>
+  `;
+  
+  container.innerHTML = '';
+  container.appendChild(adDiv);
+  
+  setTimeout(() => {
+      const script = document.createElement('script');
+      script.src = ad.script;
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      script.id = `sidebar-script-${uniqueId}`;
+      
+      script.onload = () => {
+          console.log(`✅ Sidebar Ad loaded: ${ad.id}`);
+          
+          // ✅ إضافة معالج لتصحيح أحجام الإعلانات بعد التحميل
+          setTimeout(() => {
+              this.fixAdSizeInContainer(`sidebar-${uniqueId}`, expectedWidth, expectedHeight);
+          }, 1000);
+      };
+      
+      script.onerror = () => {
+          console.warn(`⚠️ فشل تحميل Sidebar Ad: ${ad.id}`);
+          this.showFallbackInContainer(container);
+      };
+      
+      const targetElement = document.getElementById(`sidebar-${uniqueId}`);
+      if (targetElement) {
+          targetElement.appendChild(script);
+      }
+  }, 300);
+}
 
+  // === دالة جديدة: إصلاح أحجام الإعلانات تلقائياً ===
+fixAdSizeInContainer(containerId, expectedWidth, expectedHeight) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // البحث عن جميع الـ iframes داخل الحاوية
+  const iframes = container.querySelectorAll('iframe');
+  
+  iframes.forEach(iframe => {
+    const actualWidth = iframe.width || iframe.getAttribute('width');
+    const actualHeight = iframe.height || iframe.getAttribute('height');
+    
+    console.log(`📐 إعلان: ${actualWidth}x${actualHeight} | متوقع: ${expectedWidth}x${expectedHeight}`);
+    
+    // ✅ إذا كان الإعلان أعرض من الحاوية
+    if (parseInt(actualWidth) > expectedWidth) {
+      const scale = expectedWidth / parseInt(actualWidth);
+      
+      iframe.style.cssText = `
+        transform: scale(${scale});
+        transform-origin: center center;
+        width: ${actualWidth}px !important;
+        height: ${actualHeight}px !important;
+        max-width: none;
+        position: relative;
+        left: 50%;
+        margin-left: -${parseInt(actualWidth) / 2}px;
+      `;
+      
+      console.log(`✅ تم تصغير الإعلان بنسبة: ${(scale * 100).toFixed(0)}%`);
+    }
+    
+    // ✅ إذا كان الإعلان أصغر من الحاوية (مركزه)
+    else if (parseInt(actualWidth) < expectedWidth) {
+      iframe.style.cssText = `
+        display: block;
+        margin: 0 auto;
+        width: ${actualWidth}px !important;
+        height: ${actualHeight}px !important;
+      `;
+      
+      console.log(`✅ تم توسيط الإعلان الصغير`);
+    }
+  });
+  
+  // ✅ معالجة العناصر الأخرى (div, ins)
+  const otherAds = container.querySelectorAll('ins, div[style*="width"]');
+  otherAds.forEach(element => {
+    if (element.offsetWidth > expectedWidth) {
+      const scale = expectedWidth / element.offsetWidth;
+      element.style.transform = `scale(${scale})`;
+      element.style.transformOrigin = 'center center';
+    }
+  });
+}
   // === 12. تحميل Social Bar ===
   loadSocialBar() {
     if (!this.config.socialBar?.enabled) return;
