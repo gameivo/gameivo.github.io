@@ -6,6 +6,7 @@
  * ✅ الحفاظ على نظام Anti-AdBlock
  * ✅ إضافة نظام تحجيم ذكي للإعلانات (Zero Clipping Solution)
  * ✅ نظام إعلانات ذكي يضمن توافق الأبعاد والعرض الصحيح
+ * ✅ إصلاح مشكلة عدم ظهور جميع الإعلانات وتدويرها
  */
 
 class AdsManager {
@@ -20,7 +21,8 @@ class AdsManager {
     this.isMobile = this.detectMobile();
     this.screenSize = this.getScreenSize();
     this.adScalingObservers = new Map();
-    this.adDimensionCompatibility = new Map(); // 🆕 تتبع توافق أبعاد الإعلانات
+    this.adDimensionCompatibility = new Map();
+    this.adRotationIndexes = {}; // 🆕 تتبع مؤشرات التدوير لكل حاوية
   }
 
   // === 🆕 كشف الأجهزة المحمولة ===
@@ -44,7 +46,6 @@ class AdsManager {
 
   // === 🆕 نظام توافق أبعاد الإعلانات الذكي ===
   checkAdCompatibility(adConfig, containerId) {
-    // تحديد أبعاد الحاوية المتوقعة بناءً على ID
     const containerDimensions = {
       'ad-above-iframe': { width: 728, height: 90, type: 'leaderboard' },
       'ad-below-iframe': { width: 728, height: 90, type: 'leaderboard' },
@@ -56,20 +57,22 @@ class AdsManager {
 
     const containerInfo = containerDimensions[containerId] || { width: 300, height: 250 };
     
-    // التحقق من توافق الأبعاد
     const adWidth = adConfig.config?.width || 300;
     const adHeight = adConfig.config?.height || 250;
     
     const widthRatio = adWidth / containerInfo.width;
     const heightRatio = adHeight / containerInfo.height;
     
-    // تسجيل معلومات التوافق
+    // 🔧 إصلاح: لا نرفض الإعلانات غير المتوافقة، بل نضبطها فقط
+    const isCompatible = Math.abs(widthRatio - 1) < 0.5 && Math.abs(heightRatio - 1) < 0.5;
+    
     this.adDimensionCompatibility.set(adConfig.id, {
       adDimensions: { width: adWidth, height: adHeight },
       containerDimensions: containerInfo,
-      isCompatible: Math.abs(widthRatio - 1) < 0.3 && Math.abs(heightRatio - 1) < 0.3,
+      isCompatible: true, // 🔧 دائماً متوافق - سنعالجه لاحقاً
       widthRatio,
-      heightRatio
+      heightRatio,
+      needsScaling: widthRatio > 1.3 || heightRatio > 1.3 || widthRatio < 0.7 || heightRatio < 0.7
     });
 
     return this.adDimensionCompatibility.get(adConfig.id);
@@ -79,30 +82,32 @@ class AdsManager {
   handleNonCompatibleAd(adElement, compatibilityInfo) {
     if (!adElement) return;
     
-    const { adDimensions, containerDimensions, widthRatio, heightRatio } = compatibilityInfo;
+    const { adDimensions, containerDimensions, widthRatio, heightRatio, needsScaling } = compatibilityInfo;
     
-    console.log(`⚠️ إعلان غير متوافق: ${adDimensions.width}x${adDimensions.height} في حاوية ${containerDimensions.width}x${containerDimensions.height}`);
+    if (!needsScaling) return;
     
-    // تطبيق التحجيم المناسب
-    if (widthRatio > 1.5 || heightRatio > 1.5) {
-      // إعلان كبير جداً - تطبيق تحجيم متناسب
-      const scale = Math.min(containerDimensions.width / adDimensions.width, 
-                            containerDimensions.height / adDimensions.height);
-      const safeScale = Math.min(scale, 0.95); // حماية من التحجيم الزائد
+    console.log(`⚙️ ضبط إعلان: ${adDimensions.width}x${adDimensions.height} في حاوية ${containerDimensions.width}x${containerDimensions.height}`);
+    
+    if (widthRatio > 1.3 || heightRatio > 1.3) {
+      // إعلان كبير - تحجيم
+      const scale = Math.min(
+        containerDimensions.width / adDimensions.width, 
+        containerDimensions.height / adDimensions.height
+      );
+      const safeScale = Math.min(scale, 0.95);
       
       adElement.style.transform = `scale(${safeScale})`;
       adElement.style.transformOrigin = 'top center';
       adElement.style.margin = '0 auto';
       adElement.style.display = 'block';
       
-      console.log(`📐 تطبيق تحجيم: ${scale.toFixed(2)}`);
+      console.log(`📐 تطبيق تحجيم: ${safeScale.toFixed(2)}`);
     } else if (widthRatio < 0.7 || heightRatio < 0.7) {
-      // إعلان صغير جداً - توسيطه مع خلفية
+      // إعلان صغير - توسيط مع خلفية
       adElement.style.margin = '0 auto';
       adElement.style.display = 'flex';
       adElement.style.alignItems = 'center';
       adElement.style.justifyContent = 'center';
-      adElement.style.backgroundColor = 'rgba(0,0,0,0.1)';
     }
   }
 
@@ -163,7 +168,6 @@ class AdsManager {
       console.log('✅ تم تحميل إعدادات الإعلانات');
       console.log(`📱 نوع الجهاز: ${this.isMobile ? 'Mobile' : 'Desktop'} (${this.screenSize})`);
       
-      // ✅ التحقق من تفعيل Anti-AdBlock
       const antiAdblockEnabled = this.config.antiAdblock?.enabled ?? true;
       
       if (antiAdblockEnabled) {
@@ -179,12 +183,10 @@ class AdsManager {
         console.log('⚠️ Anti-AdBlock معطّل - تخطي الفحص');
       }
       
-      // تحميل جميع الإعلانات باستخدام النظام الجديد
       await this.loadAllAds();
       console.log('🎯 تم تفعيل جميع الإعلانات بنجاح');
       this.startAdScalingSystem();
       
-      // إضافة مراقب لتغيير حجم الشاشة
       this.setupResponsiveListener();
       
     } catch (error) {
@@ -219,13 +221,11 @@ class AdsManager {
     
     allAdContainers.forEach(container => {
       if (this.isMobile) {
-        // إخفاء sidebar في الموبايل
         if (container.id.includes('sidebar')) {
           container.style.display = 'none';
           return;
         }
         
-        // تعديل البانرات للموبايل
         container.style.maxWidth = '100%';
         container.style.margin = '5px auto';
         
@@ -235,7 +235,6 @@ class AdsManager {
           wrapper.style.padding = '5px';
         });
       } else {
-        // استعادة العرض للديسكتوب
         if (container.id.includes('sidebar')) {
           container.style.display = 'block';
         }
@@ -268,7 +267,6 @@ class AdsManager {
     return hasAdBlock;
   }
 
-  // اختبار سريع
   async quickAdBlockTest() {
     return new Promise(resolve => {
       const test = document.createElement('div');
@@ -284,7 +282,6 @@ class AdsManager {
     });
   }
 
-  // اختبار 1: إنشاء عنصر إعلان وتفحصه
   async testAdElement() {
     return new Promise(resolve => {
       const adElement = document.createElement('div');
@@ -339,7 +336,6 @@ class AdsManager {
     });
   }
 
-  // اختبار 2: محاولة تحميل سكريبت إعلان
   async testAdScript() {
     return new Promise(resolve => {
       const testScript = document.createElement('script');
@@ -373,7 +369,6 @@ class AdsManager {
     });
   }
 
-  // اختبار 3: محاولة fetch لمسار إعلان
   async testAdFetch() {
     try {
       const response = await fetch('https://google-analytics.com/analytics.js', {
@@ -638,44 +633,37 @@ class AdsManager {
     document.body.appendChild(helpOverlay);
   }
 
-  // === 6. تحميل جميع الإعلانات ===
+  // === 6. تحميل جميع الإعلانات - إصلاح مشكلة عدم الظهور ===
   async loadAllAds() {
     console.log('📦 بدء تحميل جميع الإعلانات...');
     
-    // 1. Social Bar أولاً
+    // 🔧 إصلاح: الترتيب القديم الذي يعمل
     this.loadSocialBar();
-    
-    // 2. إعلانات سريعة
     this.loadNativeBanner();
     
-    // 3. إعلانات Sidebar (فقط للديسكتوب)
     if (!this.isMobile) {
       setTimeout(() => {
         this.loadSidebarAds();
       }, 500);
     }
     
-    // 4. بانرات اللعبة
     await this.delay(1000);
     this.loadBanners();
     
-    // 5. إعلان وسط الصفحة
     await this.delay(1500);
     this.loadMiddleAd();
     
-    // 6. إعلان إضافي في Sidebar (فقط للديسكتوب)
     if (!this.isMobile) {
       await this.delay(2000);
       this.loadExtraSidebarAd();
     }
     
-    // 7. إعلانات تفاعلية (Popunder & Smartlink)
     await this.delay(2500);
     this.loadPopunder();
     this.loadSmartlink();
   }
 
-  // === 7. تحميل البانرات ===
+  // === 7. تحميل البانرات - إصلاح التدوير ===
   loadBanners() {
     console.log('🖼️ تحميل البانرات...');
     
@@ -684,13 +672,13 @@ class AdsManager {
       const cfg = this.config.banners?.[section];
       if (cfg?.enabled) {
         const containerId = `ad-${section.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
-        this.renderSmartBanner(containerId, cfg);
+        this.renderAllBanners(containerId, cfg); // 🔧 تغيير الدالة
       }
     });
   }
 
-  // === 🆕 دالة renderSmartBanner - ذكية تعالج مشكلة الأبعاد ===
-  renderSmartBanner(containerId, bannerConfig) {
+  // === 🆕 دالة renderAllBanners - تعرض جميع الإعلانات مع تدوير صحيح ===
+  renderAllBanners(containerId, bannerConfig) {
     const container = document.getElementById(containerId);
     if (!container || !bannerConfig.ads || !bannerConfig.ads.length) {
       console.warn(`❌ Container ${containerId} not found or no ads`);
@@ -703,41 +691,49 @@ class AdsManager {
       return;
     }
 
-    // 🆕 فلترة الإعلانات المتوافقة مع الحاوية
-    const compatibleAds = bannerConfig.ads.filter(ad => {
-      const compatibility = this.checkAdCompatibility(ad, containerId);
-      return compatibility.isCompatible;
-    });
-
-    // إذا لم توجد إعلانات متوافقة، نستخدم كل الإعلانات مع معالجة خاصة
-    const adsToUse = compatibleAds.length > 0 ? compatibleAds : bannerConfig.ads;
+    // 🔧 إصلاح: استخدام جميع الإعلانات دون تصفية
+    const adsToUse = bannerConfig.ads;
     
-    console.log(`🎯 ${containerId}: ${compatibleAds.length}/${bannerConfig.ads.length} إعلان متوافق`);
+    console.log(`🎯 ${containerId}: ${adsToUse.length} إعلان متاح`);
 
-    let currentIndex = 0;
+    // 🔧 إصلاح: تهيئة مؤشر التدوير
+    if (!this.adRotationIndexes[containerId]) {
+      this.adRotationIndexes[containerId] = 0;
+    }
+
     const updateAd = () => {
+      const currentIndex = this.adRotationIndexes[containerId] || 0;
       const ad = adsToUse[currentIndex];
-      this.injectSmartAdScript(container, ad, containerId);
-      if (bannerConfig.rotation && adsToUse.length > 1) {
-        currentIndex = (currentIndex + 1) % adsToUse.length;
+      
+      if (ad) {
+        this.injectAdScriptWithRotation(container, ad, containerId, currentIndex);
+        
+        // تحديث المؤشر للتدوير
+        this.adRotationIndexes[containerId] = (currentIndex + 1) % adsToUse.length;
       }
     };
 
+    // تحميل أول إعلان
     updateAd();
+    
+    // 🔧 إصلاح: بدء التدوير إذا كان مفعلاً
     if (bannerConfig.rotation && adsToUse.length > 1) {
       if (this.rotationTimers[containerId]) {
         clearInterval(this.rotationTimers[containerId]);
       }
       
-      this.rotationTimers[containerId] = setInterval(updateAd, bannerConfig.rotationInterval || 30000);
+      this.rotationTimers[containerId] = setInterval(() => {
+        updateAd();
+        console.log(`🔄 تدوير إعلان في ${containerId}`);
+      }, bannerConfig.rotationInterval || 30000);
     }
   }
 
-  // === 🆕 دالة injectSmartAdScript - ذكية مع معالجة الأبعاد ===
-  injectSmartAdScript(container, ad, containerId) {
+  // === 🆕 دالة injectAdScriptWithRotation - تدوير صحيح ===
+  injectAdScriptWithRotation(container, ad, containerId, index) {
     if (!ad || !ad.script) return;
     
-    console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
+    console.log(`📢 تحميل إعلان ${index + 1}/${this.config.banners?.[this.getSectionName(containerId)]?.ads?.length || '?'}: ${ad.id} في ${containerId}`);
     
     const uniqueId = `ad_${Math.random().toString(36).substr(2, 9)}`;
     const compatibility = this.checkAdCompatibility(ad, containerId);
@@ -749,27 +745,24 @@ class AdsManager {
         params: ad.config?.params || {}
     });
     
-    // تحديد الأبعاد بناءً على التوافق
+    // تحديد الأبعاد المناسبة
     let adWidth = ad.config?.width || 300;
     let adHeight = ad.config?.height || 250;
     
-    // إذا كان الإعلان غير متوافق، نضبط الأبعاد للحاوية
-    if (!compatibility.isCompatible) {
-      const containerDimensions = {
-        'ad-above-iframe': { width: 728, height: 90 },
-        'ad-below-iframe': { width: 728, height: 90 },
-        'ad-page-bottom': { width: 728, height: 90 },
-        'ad-page-middle': { width: 300, height: 250 },
-        'ad-sidebar': { width: 300, height: 600 },
-        'ad-sidebar-extra': { width: 300, height: 250 }
-      };
-      
-      const targetSize = containerDimensions[containerId] || { width: 300, height: 250 };
-      adWidth = targetSize.width;
-      adHeight = targetSize.height;
-      
-      console.log(`🔄 ضبط أبعاد الإعلان ${ad.id} إلى ${adWidth}x${adHeight} للحاوية ${containerId}`);
-    }
+    const containerDimensions = {
+      'ad-above-iframe': { width: 728, height: 90 },
+      'ad-below-iframe': { width: 728, height: 90 },
+      'ad-page-bottom': { width: 728, height: 90 },
+      'ad-page-middle': { width: 300, height: 250 },
+      'ad-sidebar': { width: 300, height: 600 },
+      'ad-sidebar-extra': { width: 300, height: 250 }
+    };
+    
+    const targetSize = containerDimensions[containerId] || { width: 300, height: 250 };
+    
+    // استخدام أبعاد الإعلان الفعلية
+    adWidth = ad.config?.width || targetSize.width;
+    adHeight = ad.config?.height || targetSize.height;
     
     const maxWidth = this.isMobile ? '100%' : adWidth + 'px';
     
@@ -796,7 +789,7 @@ class AdsManager {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: ${!compatibility.isCompatible ? 'rgba(0,0,0,0.05)' : 'transparent'};
+          background: transparent;
           border-radius: 4px;
         ">
           <small style="
@@ -807,18 +800,6 @@ class AdsManager {
             color: #666;
             z-index: 10;
           ">Advertisement</small>
-          ${!compatibility.isCompatible ? 
-            `<div class="ad-compatibility-note" style="
-              position: absolute;
-              bottom: 5px;
-              right: 5px;
-              font-size: 8px;
-              color: #999;
-              background: rgba(255,255,255,0.7);
-              padding: 1px 3px;
-              border-radius: 2px;
-            ">Auto-adjusted</div>` : ''
-          }
         </div>
       </div>
     `;
@@ -831,9 +812,8 @@ class AdsManager {
         script.id = `script-${uniqueId}`;
         
         script.onload = () => {
-            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+            console.log(`✅ تم تحميل إعلان: ${ad.id} (${index + 1}/${this.config.banners?.[this.getSectionName(containerId)]?.ads?.length || '?'})`);
             
-            // تطبيق نظام التحجيم الذكي
             setTimeout(() => {
               const adContainer = document.getElementById(uniqueId);
               if (adContainer) {
@@ -841,17 +821,14 @@ class AdsManager {
                 const inses = adContainer.querySelectorAll('ins');
                 const images = adContainer.querySelectorAll('img');
                 
-                // تطبيق التحجيم الذكي على جميع عناصر الإعلان
+                // تطبيق التحجيم الذكي
                 [...iframes, ...inses, ...images].forEach(element => {
-                  // التحقق من التوافق أولاً
-                  if (!compatibility.isCompatible) {
+                  if (compatibility.needsScaling) {
                     this.handleNonCompatibleAd(element, compatibility);
                   }
                   
-                  // ثم تطبيق التحجيم العادي
                   this.scaleAdElement(element);
                   
-                  // ضمان العرض الصحيح
                   element.style.maxWidth = '100%';
                   element.style.maxHeight = adHeight + 'px';
                   element.style.objectFit = 'contain';
@@ -874,15 +851,29 @@ class AdsManager {
     }, 300);
   }
 
+  // === 🆕 دالة مساعدة للحصول على اسم القسم ===
+  getSectionName(containerId) {
+    const sectionMap = {
+      'ad-above-iframe': 'aboveIframe',
+      'ad-below-iframe': 'belowIframe',
+      'ad-page-bottom': 'pageBottom',
+      'ad-page-middle': 'pageMiddle',
+      'ad-sidebar': 'sidebar',
+      'ad-sidebar-extra': 'sidebarExtra'
+    };
+    
+    return sectionMap[containerId] || containerId;
+  }
+
   // === 8. إضافة إعلان في وسط المحتوى ===
   loadMiddleAd() {
     if (!this.config.banners?.pageMiddle?.enabled) return;
     
     const container = this.ensureContainerExists('ad-page-middle');
-    this.renderSmartBanner('ad-page-middle', this.config.banners.pageMiddle);
+    this.renderAllBanners('ad-page-middle', this.config.banners.pageMiddle);
   }
 
-  // === 9. تحميل إعلان إضافي في الجانب (فقط للديسكتوب) ===
+  // === 9. تحميل إعلان إضافي في الجانب ===
   loadExtraSidebarAd() {
     if (!this.config.sidebarAdExtra?.enabled) return;
     if (this.isMobile) return;
@@ -906,7 +897,7 @@ class AdsManager {
       }
     }
     
-    this.renderSmartBanner('ad-sidebar-extra', this.config.sidebarAdExtra);
+    this.renderAllBanners('ad-sidebar-extra', this.config.sidebarAdExtra);
   }
 
   // === 10. تحميل Native Banner ===
@@ -916,7 +907,6 @@ class AdsManager {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
     
-    // إخفاء في الموبايل إذا كان في sidebar
     if (this.isMobile) {
       console.log('⚠️ Native Banner مخفي في الموبايل');
       return;
@@ -942,7 +932,7 @@ class AdsManager {
     }
   }
 
-  // === 11. تحميل إعلانات Sidebar (فقط للديسكتوب) ===
+  // === 11. تحميل إعلانات Sidebar ===
   loadSidebarAds() {
     if (!this.config.sidebarAd?.enabled) return;
     if (this.isMobile) return;
@@ -966,7 +956,7 @@ class AdsManager {
       }
     }
     
-    this.renderSmartBanner('ad-sidebar', this.config.sidebarAd);
+    this.renderAllBanners('ad-sidebar', this.config.sidebarAd);
   }
 
   // === 12. تحميل Social Bar ===
@@ -995,11 +985,10 @@ class AdsManager {
     }, this.config.socialBar.delay || 3000);
   }
 
-  // === 13. تحميل Popunder - ✅ مُصلح تماماً ===
+  // === 13. تحميل Popunder ===
   loadPopunder() {
     if (!this.config.popunder?.enabled) return;
     
-    // ✅ التحقق من عدم الظهور في هذه الصفحة
     if (this.popunderShownThisPageLoad) {
       console.log('✅ Popunder already shown on this page load.');
       return;
@@ -1026,9 +1015,7 @@ class AdsManager {
         console.log(`✅ Popunder script loaded: ${scriptUrl}`);
       });
       
-      // ✅ تعيين المتغير المحلي فقط (يُعاد تعيينه عند Refresh)
       this.popunderShownThisPageLoad = true;
-      
       console.log(`🚀 Popunder Triggered (will reset on page refresh)`);
     }, cfg.delay || 8000);
   }
@@ -1043,12 +1030,10 @@ class AdsManager {
       console.log('🎯 تفعيل Smartlink Popunder بالنقر...');
       this.setupSmartlinkPopunder();
     } else {
-      // الطريقة القديمة (فتح مباشر)
       this.openSmartlinkDirect();
     }
   }
 
-  // دالة جديدة: إعداد Popunder بالنقر
   setupSmartlinkPopunder() {
     const minInterval = this.config.smartlink.minIntervalBetweenShows || 300000;
     const maxShows = this.config.smartlink.maxShowsPerSession || 3;
@@ -1101,7 +1086,6 @@ class AdsManager {
     console.log('✅ Smartlink Popunder جاهز - في انتظار نقرة المستخدم...');
   }
 
-  // دالة جديدة: فتح Popunder في تاب جديد
   openSmartlinkPopunder() {
     const url = this.config.smartlink.url;
     
@@ -1122,7 +1106,6 @@ class AdsManager {
     }
   }
 
-  // دالة الطريقة القديمة (احتياطي)
   openSmartlinkDirect() {
     const frequency = this.config.smartlink.frequency;
     if (frequency === 'once_per_session' && this.sessionData.smartlinkOpened) {
@@ -1424,7 +1407,6 @@ document.addEventListener('DOMContentLoaded', () => {
   adsManager.init();
   window.adsManager = adsManager;
   
-  // إضافة أنماط CSS محسنة مع نظام الإعلانات الذكي
   const style = document.createElement('style');
   style.textContent = `
     .ad-banner {
@@ -1465,16 +1447,6 @@ document.addEventListener('DOMContentLoaded', () => {
       max-width: 100% !important;
     }
     
-    .ad-content-scaler {
-      display: inline-block !important;
-      transition: all 0.3s ease !important;
-      max-width: 100% !important;
-      transform-origin: center center !important;
-      overflow: hidden !important;
-      position: relative !important;
-    }
-    
-    /* 🆕 أنماط خاصة للإعلانات الذكية */
     .smart-ad-container iframe,
     .smart-ad-container ins,
     .smart-ad-container img,
@@ -1570,13 +1542,11 @@ document.addEventListener('DOMContentLoaded', () => {
       pointer-events: auto !important;
     }
     
-    /* إصلاحات Zero Clipping */
     .ad-container-responsive {
       max-width: 100vw !important;
       overflow-x: hidden !important;
     }
 
-    /* === حل نهائي للإعلانات الكبيرة على الموبايل === */
     .ad-banner iframe,
     .ad-banner ins,
     .smart-ad-wrapper iframe,
@@ -1602,7 +1572,6 @@ document.addEventListener('DOMContentLoaded', () => {
         width: 100%;
       }
       
-      /* 🆕 تحسينات متقدمة للموبايل */
       iframe, ins, embed, object, img {
         max-width: 100% !important;
         width: 100% !important;
@@ -1628,31 +1597,23 @@ document.addEventListener('DOMContentLoaded', () => {
         position: static !important;
       }
       
-      .ad-content-scaler {
-        transform-origin: center center !important;
-      }
-      
-      /* إخفاء sidebar تماماً في الموبايل */
       #ad-sidebar, 
       #ad-sidebar-extra,
       .sidebar .ad-banner {
         display: none !important;
       }
       
-      /* تحسين حجم النصوص */
       .ad-label, .ad-banner small {
         font-size: 8px;
         padding: 1px 4px;
       }
       
-      /* توسيط الإعلانات */
       [id^="ad-"] {
         max-width: 100%;
         margin-left: auto;
         margin-right: auto;
       }
       
-      /* تحجيم تلقائي للبانرات العريضة على الموبايل */
       #ad-above-iframe,
       #ad-below-iframe,
       #ad-page-bottom {
@@ -1665,20 +1626,17 @@ document.addEventListener('DOMContentLoaded', () => {
         min-height: 250px !important;
       }
       
-      /* ضبط أقصى عرض للإعلانات على الموبايل */
       .ad-banner > *,
       .smart-ad-wrapper > * {
         max-width: calc(100vw - 20px) !important;
       }
       
-      /* 🆕 معالجة خاصة للإعلانات العريضة على الموبايل */
       .smart-ad-container {
         transform: scale(0.95) !important;
         transform-origin: center center !important;
       }
     }
     
-    /* هواتف صغيرة جداً */
     @media (max-width: 480px) {
       .ad-banner {
         padding: 6px !important;
@@ -1696,20 +1654,17 @@ document.addEventListener('DOMContentLoaded', () => {
         padding: 3px !important;
       }
       
-      /* تصغير العناصر الكبيرة */
       .smart-ad-container {
         transform: scale(0.9) !important;
         transform-origin: center center !important;
       }
       
-      /* ضبط أقصر لأحجام الإعلانات على الشاشات الصغيرة */
       #ad-sidebar,
       #ad-sidebar-extra {
         min-height: 250px !important;
       }
     }
     
-    /* تابلت */
     @media (min-width: 769px) and (max-width: 1024px) {
       .ad-wrapper {
         max-width: 90%;
@@ -1721,29 +1676,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     
-    /* 🆕 تحسين عرض الإعلانات داخل الـ containers */
     [id^="ad-"] > * {
       max-width: 100%;
       overflow: hidden;
     }
     
-    /* منع scroll أفقي بسبب الإعلانات */
     body {
       overflow-x: hidden;
     }
     
-    /* أنماط التحجيم الذكي */
     .ad-scaled {
       transition: transform 0.3s ease !important;
     }
     
-    /* منع التمرير الأفقي داخل الإعلانات */
     .ad-banner * {
       max-width: 100% !important;
       box-sizing: border-box !important;
     }
     
-    /* إصلاح خاص لشركات الإعلانات الشائعة */
     ins.adsbygoogle,
     iframe[src*="ads"],
     div[id*="ad"],
@@ -1753,7 +1703,6 @@ document.addEventListener('DOMContentLoaded', () => {
       object-fit: contain !important;
     }
     
-    /* 🆕 تأثيرات خاصة للإعلانات المتوافقة */
     .smart-ad-container.compatible-ad {
       border: 1px solid rgba(46, 204, 113, 0.3) !important;
       box-shadow: 0 0 10px rgba(46, 204, 113, 0.1) !important;
