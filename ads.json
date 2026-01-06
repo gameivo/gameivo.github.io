@@ -7,7 +7,7 @@
   },
   
   "popunder": {
-    "enabled": true,
+    "enabled": false,
     "frequency": "once_per_session",
     "maxPerSession": 1,
     "delay": 8000,
