@@ -22,18 +22,18 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Tic Tac Toe - FreePlayHub">
   <meta property="og:description" content="Play Tic Tac Toe online for free on Papergames.io — the classic 3×3 grid game where strategy and quick thinking make all the difference! Challenge a friend or play against the computer using Xs and Os">
-  <meta property="og:image" content="https://rowhub.github.io/images/84.png">
-  <meta property="og:url" content="https://rowhub.github.io/tic-tac-toe.html">
+  <meta property="og:image" content="https://gameivo.github.io/images/84.png">
+  <meta property="og:url" content="https://gameivo.github.io/tic-tac-toe.html">
   <meta property="og:site_name" content="FreePlayHub">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Tic Tac Toe - FreePlayHub">
   <meta name="twitter:description" content="Play Tic Tac Toe online for free on Papergames.io — the classic 3×3 grid game where strategy and quick thinking make all the difference! Challenge a friend or play against the computer using Xs and Os">
-  <meta name="twitter:image" content="https://rowhub.github.io/images/84.png">
+  <meta name="twitter:image" content="https://gameivo.github.io/images/84.png">
   
   <!-- Canonical URL -->
-  <link rel="canonical" href="https://rowhub.github.io/tic-tac-toe.html">
+  <link rel="canonical" href="https://gameivo.github.io/tic-tac-toe.html">
   
   <!-- Game Schema للعبة الحالية -->
   <script type="application/ld+json">
@@ -41,7 +41,7 @@
     "@context": "https://schema.org",
     "@type": "VideoGame",
     "name": "Tic Tac Toe",
-    "url": "https://rowhub.github.io/tic-tac-toe.html",
+    "url": "https://gameivo.github.io/tic-tac-toe.html",
     "description": "Play Tic Tac Toe online for free on Papergames.io — the classic 3×3 grid game where strategy and quick thinking make all the difference! Challenge a friend or play against the computer using Xs and Os",
     "playMode": "Browser",
     "gamePlatform": "HTML5",
@@ -57,8 +57,8 @@
       "price": "0",
       "priceCurrency": "USD"
     },
-    "image": "https://rowhub.github.io/images/84.png",
-    "datePublished": "2025-12-22"
+    "image": "https://gameivo.github.io/images/84.png",
+    "datePublished": "2026-01-06"
   }
   </script>
 
@@ -72,19 +72,19 @@
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://rowhub.github.io"
+        "item": "https://gameivo.github.io"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "Games",
-        "item": "https://rowhub.github.io"
+        "item": "https://gameivo.github.io"
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": "Tic Tac Toe",
-        "item": "https://rowhub.github.io/tic-tac-toe.html"
+        "item": "https://gameivo.github.io/tic-tac-toe.html"
       }
     ]
   }
@@ -370,8 +370,8 @@
   <header class="game-header">
     <div class="container">
       <div class="header-content">
-        <a href="https://rowhub.github.io" class="logo"><span>🎮</span><span>FreePlayHub</span></a>
-        <a href="https://rowhub.github.io" class="back-btn">← Back to All Games</a>
+        <a href="https://gameivo.github.io" class="logo"><span>🎮</span><span>FreePlayHub</span></a>
+        <a href="https://gameivo.github.io" class="back-btn">← Back to All Games</a>
       </div>
     </div>
   </header>
@@ -446,8 +446,8 @@
             </div>
             
             <div class="related-links">
-              <a href="https://rowhub.github.io">All Games</a> • 
-              <a href="https://rowhub.github.io">Browse Collection</a>
+              <a href="https://gameivo.github.io">All Games</a> • 
+              <a href="https://gameivo.github.io">Browse Collection</a>
             </div>
           </div>
           
@@ -479,137 +479,13 @@
     </div>
   </div>
 
-  <script>
+<!-- تحميل نظام الإعلانات الذكي -->
+<script src="ads-manager.js" defer></script>
+
+<script>
   document.addEventListener("DOMContentLoaded", function () {
-      // === 1. تحميل الإعلانات من ملف ads.json ===
-      async function loadAds() {
-          try {
-              const response = await fetch('ads.json');
-              
-              if (!response.ok) {
-                  throw new Error('Failed to load ads configuration');
-              }
-              
-              const adsConfig = await response.json();
-              
-              // حقن الإعلانات بناءً على الإعدادات
-              injectAds(adsConfig);
-              
-          } catch (error) {
-              console.error('Error loading ads:', error);
-          }
-      }
+      // === فقط كود تحميل اللعبة والألعاب المقترحة ===
       
-      function injectAds(adsConfig) {
-          // Banner فوق الـ iframe
-          if (adsConfig.banners && adsConfig.banners.aboveIframe && adsConfig.banners.aboveIframe.enabled) {
-              const container = document.getElementById('ad-above-iframe');
-              if (container) {
-                  container.innerHTML = adsConfig.banners.aboveIframe.html;
-              }
-          }
-          
-          // Banner تحت الـ iframe
-          if (adsConfig.banners && adsConfig.banners.belowIframe && adsConfig.banners.belowIframe.enabled) {
-              const container = document.getElementById('ad-below-iframe');
-              if (container) {
-                  container.innerHTML = adsConfig.banners.belowIframe.html;
-              }
-          }
-          
-          // Banner أسفل الصفحة
-          if (adsConfig.banners && adsConfig.banners.pageBottom && adsConfig.banners.pageBottom.enabled) {
-              const container = document.getElementById('ad-page-bottom');
-              if (container) {
-                  container.innerHTML = adsConfig.banners.pageBottom.html;
-              }
-          }
-          
-          // Fullscreen Ad - الإعلان الذي يظهر عند تكبير الـ iframe
-          if (adsConfig.fullscreenAd && adsConfig.fullscreenAd.enabled) {
-              const container = document.getElementById('fullscreen-ad');
-              if (container) {
-                  container.innerHTML = adsConfig.fullscreenAd.html;
-              }
-          }
-          
-          // Sidebar Ad
-          if (adsConfig.sidebarAd && adsConfig.sidebarAd.enabled) {
-              const container = document.getElementById('ad-sidebar');
-              if (container) {
-                  container.innerHTML = adsConfig.sidebarAd.html;
-              }
-          }
-          
-          // Vertical Sidebar Ad
-          if (adsConfig.sidebarAd && adsConfig.sidebarAd.enabled) {
-              const container = document.getElementById('ad-sidebar-vertical');
-              if (container) {
-                  container.innerHTML = adsConfig.sidebarAd.html.replace('300x250', '300x600').replace('Sidebar+Ad+300x250', 'Vertical+Banner+300x600');
-              }
-          }
-          
-          // Interstitial Ad
-          if (adsConfig.interstitialAd && adsConfig.interstitialAd.enabled) {
-              const container = document.getElementById('interstitial-ad');
-              if (container) {
-                  container.innerHTML = adsConfig.interstitialAd.html;
-              }
-          }
-          
-          // تهيئة أحداث الإعلانات بعد حقنها
-          initializeAdEvents();
-      }
-      
-      // === 2. تهيئة أحداث الإعلانات ===
-      function initializeAdEvents() {
-          // تهيئة أزرار إغلاق الإعلانات
-          document.addEventListener('click', function(e) {
-              if (e.target.classList.contains('ad-close-btn')) {
-                  const adBanner = e.target.closest('.ad-banner');
-                  if (adBanner) {
-                      const adId = adBanner.classList[1] || 'unknown';
-                      adBanner.style.display = 'none';
-                      localStorage.setItem('adClosed_' + adId, 'true');
-                  }
-              }
-              
-              // إغلاق الإعلان العلوي (fullscreen ad)
-              if (e.target.closest('#fullscreen-ad button')) {
-                  const ad = document.getElementById('fullscreen-ad');
-                  if (ad) {
-                      const adElement = ad.querySelector('div[id="ad-banner"]');
-                      if (adElement) {
-                          adElement.style.display = 'none';
-                          localStorage.setItem('adClosed_fullscreen', 'true');
-                      }
-                  }
-              }
-          });
-          
-          // التحقق من الإعلانات المغلقة سابقاً
-          setTimeout(() => {
-              document.querySelectorAll('.ad-banner').forEach(ad => {
-                  const adId = ad.classList[1];
-                  if (adId && localStorage.getItem('adClosed_' + adId) === 'true') {
-                      ad.style.display = 'none';
-                  }
-              });
-              
-              // التحقق من إعلان التكبير المغلق
-              if (localStorage.getItem('adClosed_fullscreen') === 'true') {
-                  const fullscreenAd = document.getElementById('fullscreen-ad');
-                  if (fullscreenAd) {
-                      const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-                      if (adElement) {
-                          adElement.style.display = 'none';
-                      }
-                  }
-              }
-          }, 100);
-      }
-      
-      // === 3. تحميل اللعبة ===
       const iframe = document.getElementById('game-iframe');
       const loading = document.getElementById('loading');
       
@@ -622,7 +498,7 @@
           iframe.src = "https://papergames.io/en/tic-tac-toe";
       }, 500);
       
-      // === 4. زر التكبير مع إظهار الإعلان ===
+      // === زر التكبير (نفس الكود) ===
       const zoomBtn = document.getElementById('zoom-btn');
       const gameFrame = document.querySelector('.game-frame');
       let isExpanded = false;
@@ -634,15 +510,6 @@
           document.body.style.overflow = 'hidden';
           isExpanded = true;
           zoomBtn.style.display = 'none';
-          
-          // إظهار إعلان التكبير عند الدخول في وضع ملء الشاشة
-          const fullscreenAd = document.getElementById('fullscreen-ad');
-          if (fullscreenAd && localStorage.getItem('adClosed_fullscreen') !== 'true') {
-              const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-              if (adElement) {
-                  adElement.style.display = 'block';
-              }
-          }
       }
 
       function exitCssFullscreen() {
@@ -651,15 +518,6 @@
           document.body.style.overflow = '';
           isExpanded = false;
           zoomBtn.style.display = 'flex';
-          
-          // إخفاء إعلان التكبير عند الخروج من وضع ملء الشاشة
-          const fullscreenAd = document.getElementById('fullscreen-ad');
-          if (fullscreenAd) {
-              const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-              if (adElement) {
-                  adElement.style.display = 'none';
-              }
-          }
       }
     
       async function enterBrowserFullscreen() {
@@ -672,15 +530,6 @@
               usingBrowserFS = true;
               isExpanded = true;
               zoomBtn.style.display = 'none';
-              
-              // إظهار إعلان التكبير عند الدخول في وضع ملء الشاشة
-              const fullscreenAd = document.getElementById('fullscreen-ad');
-              if (fullscreenAd && localStorage.getItem('adClosed_fullscreen') !== 'true') {
-                  const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-                  if (adElement) {
-                      adElement.style.display = 'block';
-                  }
-              }
               return true;
           } catch {
               return false;
@@ -695,15 +544,6 @@
               usingBrowserFS = false;
               isExpanded = false;
               zoomBtn.style.display = 'flex';
-              
-              // إخفاء إعلان التكبير عند الخروج من وضع ملء الشاشة
-              const fullscreenAd = document.getElementById('fullscreen-ad');
-              if (fullscreenAd) {
-                  const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-                  if (adElement) {
-                      adElement.style.display = 'none';
-                  }
-              }
               return true;
           } catch {
               return false;
@@ -731,29 +571,11 @@
               if (!gameFrame.classList.contains('fullscreen-css')) {
                   isExpanded = false;
                   zoomBtn.style.display = 'flex';
-                  
-                  // إخفاء إعلان التكبير عند الخروج من وضع ملء الشاشة
-                  const fullscreenAd = document.getElementById('fullscreen-ad');
-                  if (fullscreenAd) {
-                      const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-                      if (adElement) {
-                          adElement.style.display = 'none';
-                      }
-                  }
               }
           } else {
               usingBrowserFS = true;
               isExpanded = true;
               zoomBtn.style.display = 'none';
-              
-              // إظهار إعلان التكبير عند الدخول في وضع ملء الشاشة
-              const fullscreenAd = document.getElementById('fullscreen-ad');
-              if (fullscreenAd && localStorage.getItem('adClosed_fullscreen') !== 'true') {
-                  const adElement = fullscreenAd.querySelector('div[id="ad-banner"]');
-                  if (adElement) {
-                      adElement.style.display = 'block';
-                  }
-              }
           }
       }
 
@@ -768,7 +590,7 @@
           }
       });
       
-      // === 5. تحميل الألعاب المقترحة من JSON ===
+      // === تحميل الألعاب المقترحة ===
       async function loadSuggestedGames() {
           const gamesGrid = document.getElementById('suggested-games-grid');
           const currentGameId = "tic-tac-toe";
@@ -795,7 +617,7 @@
               
               selectedGames.forEach(game => {
                   gamesHTML += `
-                         <a href="${game.id}.html" class="game-card">
+                      <a href="${game.id}.html" class="game-card">
                           <div class="game-card-image">
                               <img src="${game.thumbnail}" 
                                    alt="Play ${game.title} - ${game.genre}" 
@@ -819,25 +641,15 @@
               gamesGrid.innerHTML = `
                   <div class="error-state" style="grid-column: 1 / -1;">
                       <p>Unable to load suggested games. Please try again later.</p>
-                      <button onclick="loadSuggestedGames()" style="
-                          background: #6c5ce7;
-                          color: white;
-                          border: none;
-                          padding: 10px 20px;
-                          border-radius: 5px;
-                          cursor: pointer;
-                          margin-top: 10px;
-                      ">Retry</button>
                   </div>
               `;
           }
       }
       
-      // === 6. بدء تحميل المحتويات الديناميكية ===
-      localStorage.removeItem('adClosed_fullscreen');
-      loadAds(); // تحميل الإعلانات أولاً
-      setTimeout(loadSuggestedGames, 1000); // ثم تحميل الألعاب المقترحة
+      // بدء تحميل الألعاب المقترحة
+      setTimeout(loadSuggestedGames, 1000);
   });
-  </script>
+</script>
+
 </body>
 </html>
