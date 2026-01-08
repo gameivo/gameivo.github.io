@@ -9,6 +9,60 @@
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
     </url>
+   <url>
+        <loc>https://gameivo.github.io/paper-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/survivor-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/state-io-conquer-the-world.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/slither-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/survev-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/lordz-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/moomoo-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/mope-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+   <url>
+        <loc>https://gameivo.github.io/slope-io.html</loc>
+        <lastmod>2026-01-06</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
     <url>
         <loc>https://gameivo.github.io/punchers.html</loc>
         <lastmod>2025-12-20</lastmod>
