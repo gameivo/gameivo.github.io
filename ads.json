@@ -12,20 +12,20 @@
     "maxPerSession": 1,
     "delay": 8000,
     "scripts": [
-      "https://pl28343660.effectivegatecpm.com/d3/01/ff/d301ff1e4475b527cf2dccff540822e5.js"
+      "https://pl28434861.effectivegatecpm.com/32/d4/9f/32d49f1b6a1e48f0897909667f379a52.js"
     ]
   },
   
   "socialBar": {
     "enabled": true,
     "delay": 5000,
-    "script": "https://pl28343653.effectivegatecpm.com/ee/e1/38/eee138143a437f55b34a35df0abbfbfe.js"
+    "script": "https://pl28434871.effectivegatecpm.com/8e/c0/1d/8ec01d013b8bf12745ff310c43b869db.js"
   },
   
   "nativeBanner": {
     "enabled": false,
-    "script": "https://pl28343658.effectivegatecpm.com/576ef3ebcc3bae2383642673940c2ab2/invoke.js",
-    "html": "<div id='container-576ef3ebcc3bae2383642673940c2ab2'></div>"
+    "script": "https://pl28434879.effectivegatecpm.com/7b2b9b89487b3dfaf080703b2e99b18b/invoke.js",
+    "html": "<div id='container-7b2b9b89487b3dfaf080703b2e99b18b'></div>"
   },
   
   "banners": {
