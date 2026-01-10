@@ -265,7 +265,7 @@
   "url": "https://www.effectivegatecpm.com/juirxbme?key=10bf57330ed7a86975a587aa5e69f302",
   "mode": "popunder",
   "triggerOnClick": true,
-  "minIntervalBetweenShows": 300000,
-  "maxShowsPerSession": 3
+  "minIntervalBetweenShows": 21600000,
+  "maxShowsPerSession": 1
  }
 }
