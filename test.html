@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BLOCOPS Game</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #000;
+        }
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="loading">جاري تحميل اللعبة...</div>
+    </div>
+
+    <script>
+        // خدعة تزييف المصدر
+        (function() {
+            // نُخفي المصدر الحقيقي
+            const originalReferrer = document.referrer;
+            
+            // نُنشئ iframe ذكي
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.display = 'none'; // نُخفيها أولاً
+            
+            // نُمرر الرابط عبر خدمة موثوقة
+            const trustedSource = 'https://playminigames.net/game/blocops';
+            const targetGame = 'https://www.crazygames.com/embed/blocops';
+            
+            // نستخدم تقنية الـ proxy غير المباشر
+            iframe.src = trustedSource;
+            
+            // بعد التحميل، نُعيد التوجيه
+            iframe.onload = function() {
+                setTimeout(() => {
+                    this.contentWindow.location.replace(targetGame);
+                    this.style.display = 'block';
+                    document.querySelector('.loading').style.display = 'none';
+                }, 1000);
+            };
+            
+            document.getElementById('gameContainer').appendChild(iframe);
+        })();
+    </script>
+</body>
+</html>
