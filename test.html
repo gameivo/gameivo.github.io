@@ -1,76 +1,248 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8"/>
-  <title>BLOCOPS - بدون تحديث</title>
-  <style>
-    html,body{margin:0;height:100%;background:#000}
-    #gameFrame{width:100%;height:100%;border:none}
-    #loadingScreen{position:fixed;inset:0;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;z-index:10}
-    .loader{border:4px solid #333;border-top-color:#ff6b00;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOCOPS - لعبة أكشن</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .game-wrapper {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 95%;
+        }
+        
+        .game-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .game-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #gameFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+        
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            color: white;
+            z-index: 10;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #ff6b00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtext {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .error-message {
+            display: none;
+            text-align: center;
+            color: #ff6b6b;
+            margin-top: 20px;
+        }
+        
+        .play-external-btn {
+            background: linear-gradient(45deg, #ff6b00, #ff8c00);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .play-external-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 0, 0.4);
+        }
+    </style>
 </head>
 <body>
-  <div id="loadingScreen">
-    <div class="loader"></div>
-  </div>
+    <div class="game-wrapper">
+        <div class="game-header">
+            <h1>🎯 BLOCOPS</h1>
+            <p>لعبة أكشن متعددة اللاعبين</p>
+        </div>
+        
+        <div class="game-container">
+            <div class="loading-screen" id="loadingScreen">
+                <div class="spinner"></div>
+                <div class="loading-text">جاري تحميل اللعبة...</div>
+                <div class="loading-subtext">يرجى الانتظار قليلاً</div>
+            </div>
+            
+            <iframe id="gameFrame" allowfullscreen></iframe>
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            <p>⚠️ تعذر تحميل اللعبة مباشرة</p>
+            <button class="play-external-btn" onclick="playExternal()">
+                🚀 العب في نافذة جديدة
+            </button>
+        </div>
+    </div>
 
-  <!-- الـ iframe الخفي -->
-  <iframe id="gameFrame" allowfullscreen></iframe>
-
-  <script>
-    /* ====== 1) نُعطي المصدر المقبول ====== */
-    const GAME_URL = "https://www.crazygames.com/embed/blocops";
-
-    /* ====== 2) نُحمل اللعبة داخل الـ iframe ====== */
-    const iframe = document.getElementById("gameFrame");
-    iframe.src = GAME_URL;
-
-    /* ====== 3) بعد ما تتحمل الصفحة نُخفي شاشة التحميل ====== */
-    iframe.onload = () => {
-      document.getElementById("loadingScreen").style.display = "none";
-      iframe.style.display = "block";
-
-      /* ====== 4) نعترض أي "click" داخل الـ iframe ====== */
-      hijackPlayButton();
-    };
-
-    /* ====== 5) دالة الاعتراض ====== */
-    function hijackPlayButton() {
-      try {
-        // نُ inject سكريبت صغير داخل الـ iframe نفسه
-        const script = iframe.contentDocument.createElement("script");
-        script.textContent = `
-          document.addEventListener("click", function (e) {
-            // إذا كان العنصر المضغوط زرّ أو يحتوي كلمة play
-            const txt = e.target.textContent.trim().toLowerCase();
-            if (txt.includes("play") || e.target.tagName === "BUTTON") {
-              // نمنع الإجراء الافتراضي (إعادة التحميل)
-              e.preventDefault();
-              e.stopPropagation();
-              // نُرسل رسالة لل parent (هذه الصفحة) ليفتح اللعبة
-              window.parent.postMessage("playPressed", "*");
+    <script>
+        class GameLoader {
+            constructor() {
+                this.gameUrl = 'https://blocops.io';
+                this.proxyUrls = [
+                    'https://api.allorigins.win/raw?url=',
+                    'https://cors-proxy.htmldriven.com/?url=',
+                    'https://proxy.cors.sh/'
+                ];
+                this.currentProxy = 0;
+                this.init();
             }
-          });
-        `;
-        iframe.contentDocument.documentElement.appendChild(script);
-      } catch (e) {
-        // في حال Same-Origin block نستخدم plan-B
-        window.addEventListener("message", handleMessage);
-      }
-    }
-
-    /* ====== 6) عند استقبال رسالة "playPressed" نفتح اللعبة ====== */
-    function handleMessage(event) {
-      if (event.data === "playPressed") {
-        // نفتح اللعبة في نافذة جديدة بدون مشاكل
-        window.open(GAME_URL, "_blank");
-      }
-    }
-
-    // تأكيد استقبال الرسالة
-    window.addEventListener("message", handleMessage);
-  </script>
+            
+            init() {
+                // محاولة التحميل المباشر أولاً
+                this.loadDirect();
+            }
+            
+            loadDirect() {
+                const iframe = document.getElementById('gameFrame');
+                
+                // تزييف المصدر
+                const originalReferrer = document.referrer;
+                Object.defineProperty(document, 'referrer', {
+                    get: () => 'https://playminigames.net/game/blocops',
+                    configurable: true
+                });
+                
+                // محاولة التحميل
+                iframe.onload = () => {
+                    this.onLoadSuccess();
+                };
+                
+                iframe.onerror = () => {
+                    this.onLoadError();
+                };
+                
+                // نضع الرابط مع تعديل بسيط
+                iframe.src = this.gameUrl + '?ref=playminigames.net';
+                
+                // مهلة للتحميل
+                setTimeout(() => {
+                    if (iframe.style.display === 'none') {
+                        this.loadWithProxy();
+                    }
+                }, 5000);
+            }
+            
+            loadWithProxy() {
+                const proxyUrl = this.proxyUrls[this.currentProxy];
+                const iframe = document.getElementById('gameFrame');
+                
+                iframe.src = proxyUrl + encodeURIComponent(this.gameUrl + '?ref=playminigames.net');
+                
+                this.currentProxy++;
+                
+                if (this.currentProxy < this.proxyUrls.length) {
+                    setTimeout(() => {
+                        if (iframe.style.display === 'none') {
+                            this.loadWithProxy();
+                        }
+                    }, 3000);
+                } else {
+                    this.showError();
+                }
+            }
+            
+            onLoadSuccess() {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('gameFrame').style.display = 'block';
+            }
+            
+            onLoadError() {
+                if (this.currentProxy < this.proxyUrls.length) {
+                    this.loadWithProxy();
+                } else {
+                    this.showError();
+                }
+            }
+            
+            showError() {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+            
+            playExternal() {
+                window.open(this.gameUrl, '_blank');
+            }
+        }
+        
+        // بدء التحميل عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            new GameLoader();
+        });
+    </script>
 </body>
 </html>
