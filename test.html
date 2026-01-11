@@ -1,262 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Crazy Games - Blocops</title>
+    <title>Blocops Game</title>
+    <meta name="referrer" content="no-referrer">
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100%;
-            background: #000;
-        }
-        #gameContainer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        #fakeUrl {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: Arial;
-            font-size: 14px;
-        }
+        body { margin: 0; padding: 0; }
+        iframe { width: 100vw; height: 100vh; border: none; }
     </style>
 </head>
 <body>
-    <div id="fakeUrl">https://www.crazygames.com/game/blocops</div>
-    <div id="gameContainer"></div>
-
+    <iframe id="game" allowfullscreen></iframe>
+    
     <script>
-        // ============ الطريقة 1: محاولة اختراق الـ referrer ============
-        (function() {
-            // محاولة تجاوز حماية referrer للمتصفح
-            const meta = document.createElement('meta');
-            meta.name = 'referrer';
-            meta.content = 'no-referrer-when-downgrade';
-            document.head.appendChild(meta);
+        // استخدم أحد هذه الخدمات المجانية كوسيط:
+        const proxyServices = [
+            // خدمة CORS Anywhere (قد تحتاج إلى طلب وصول مؤقت)
+            'https://cors-anywhere.herokuapp.com/https://blocops.io/',
             
-            // محاولة تغيير document.referrer (غير ممكن في المتصفحات الحديثة)
-            try {
-                Object.defineProperty(document, 'referrer', {
-                    get: function() {
-                        return 'https://www.crazygames.com/';
-                    },
-                    configurable: true
-                });
-            } catch(e) {}
+            // AllOrigins (بديل جيد)
+            'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://blocops.io/'),
             
-            // محاولة تغيير document.domain
-            try {
-                document.domain = 'crazygames.com';
-            } catch(e) {}
-        })();
-
-        // ============ الطريقة 2: إعادة توجيه متعددة الطبقات ============
-        function loadGameWithRedirectChain() {
-            // إنشاء سلسلة من الـ iframes لتضليل اللعبة
-            const container = document.getElementById('gameContainer');
+            // CORS Proxy
+            'https://proxy.cors.sh/https://blocops.io/',
             
-            // طبقة 1: iframe وهمي يعرض عنوان crazygames.com
-            const fakeFrame = document.createElement('iframe');
-            fakeFrame.style.cssText = 'position:absolute;width:100%;height:100%;border:none;';
-            fakeFrame.sandbox = 'allow-same-origin allow-scripts allow-popups allow-forms';
-            
-            const fakePage = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Crazy Games - Blocops</title>
-                    <base href="https://www.crazygames.com/">
-                    <style>body{margin:0;padding:0;background:#000;}</style>
-                    <script>
-                        // محاولة تغيير الـ origin
-                        try {
-                            window.origin = 'https://www.crazygames.com';
-                            document.domain = 'crazygames.com';
-                        } catch(e) {}
+            // your-own-proxy على Render/Vercel/Netlify
+            'https://your-proxy.onrender.com/proxy?url=https://blocops.io'
+        ];
+        
+        async function tryLoadGame() {
+            for (let proxy of proxyServices) {
+                try {
+                    const response = await fetch(proxy);
+                    if (response.ok) {
+                        const html = await response.text();
                         
-                        // إعادة كتابة جميع الروابط
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const links = document.getElementsByTagName('a');
-                            for(let link of links) {
-                                link.target = '_top';
-                            }
-                        });
-                    <\/script>
-                </head>
-                <body>
-                    <iframe 
-                        id="realGame" 
-                        src="${getRealGameUrl()}"
-                        style="width:100%;height:100vh;border:none;"
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-pointer-lock allow-downloads"
-                        allow="autoplay; fullscreen; gamepad *"
-                        allowfullscreen>
-                    </iframe>
-                </body>
-                </html>
-            `;
-            
-            fakeFrame.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(fakePage);
-            container.appendChild(fakeFrame);
-        }
-
-        // ============ الطريقة 3: استغلال Data URLs ============
-        function getRealGameUrl() {
-            // هنا نحتاج لاستضافة ملف HTML وسيط على سيرفر آخر
-            // لكن يمكننا استخدام data URL كبديل محدود
-            
-            const gameUrl = 'https://blocops.io/';
-            
-            // محاولة إخفاء المصدر الحقيقي
-            return gameUrl + '?ref=' + encodeURIComponent('https://www.crazygames.com') + 
-                   '&origin=' + encodeURIComponent('https://www.crazygames.com') +
-                   '&source=crazygames.com&embedded=true';
-        }
-
-        // ============ الطريقة 4: WebSocket Hijacking (نظرياً) ============
-        function attemptWebSocketOverride() {
-            // محاولة اعتراض اتصالات WebSocket
-            const originalWebSocket = window.WebSocket;
-            
-            window.WebSocket = function(url, protocols) {
-                // تغيير الـ origin في اتصالات WebSocket
-                const modifiedUrl = url;
-                const ws = new originalWebSocket(modifiedUrl, protocols);
-                
-                // إضافة رؤوس وهمية (لا تعمل في المتصفح)
-                ws._send = ws.send;
-                ws.send = function(data) {
-                    // محاولة حقن بيانات referrer
-                    if (typeof data === 'string') {
-                        try {
-                            const obj = JSON.parse(data);
-                            obj.referrer = 'https://www.crazygames.com';
-                            obj.origin = 'https://www.crazygames.com';
-                            data = JSON.stringify(obj);
-                        } catch(e) {}
+                        // تعديل HTML لاستبدال جميع روابط crazygames.com
+                        const modifiedHtml = html.replace(
+                            /https?:\/\/www\.crazygames\.com/g,
+                            'https://blocops.io'
+                        ).replace(
+                            /https?:\/\/crazygames\.com/g,
+                            'https://blocops.io'
+                        );
+                        
+                        // إنشاء Blob URL
+                        const blob = new Blob([modifiedHtml], { type: 'text/html' });
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        document.getElementById('game').src = blobUrl;
+                        return;
                     }
-                    return this._send(data);
-                };
-                
-                return ws;
-            };
-            
-            // نسخ الخصائص
-            for (let prop in originalWebSocket) {
-                window.WebSocket[prop] = originalWebSocket[prop];
+                } catch (e) {
+                    console.log(`فشل ${proxy}:`, e);
+                    continue;
+                }
             }
-        }
-
-        // ============ الطريقة 5: التلاعب في Console والبيئة ============
-        function spoofEnvironment() {
-            // محاولة خداع الكشف عن البيئة
-            const spoofs = `
-                // إعادة تعريف navigator
-                Object.defineProperty(navigator, 'userAgent', {
-                    get: () => 'Mozilla/5.0 (compatible; CrazyGames/1.0)'
-                });
-                
-                // إعادة تعريف location (للإطارات الداخلية)
-                Object.defineProperty(window, 'location', {
-                    get: () => ({
-                        href: 'https://www.crazygames.com/game/blocops',
-                        hostname: 'www.crazygames.com',
-                        origin: 'https://www.crazygames.com',
-                        protocol: 'https:'
-                    })
-                });
-                
-                // منع بعض طرق الاكتشاف
-                window.parent = window.top = window;
-                window.frameElement = null;
-            `;
             
-            // حقن الكود في جميع الإطارات
-            document.addEventListener('DOMContentLoaded', function() {
-                const script = document.createElement('script');
-                script.textContent = spoofs;
-                document.head.appendChild(script);
-            });
-        }
-
-        // ============ التنفيذ ============
-        window.onload = function() {
-            // تشغيل جميع الطرق
-            attemptWebSocketOverride();
-            spoofEnvironment();
-            
-            // تأخير تحميل اللعبة قليلاً
-            setTimeout(() => {
-                loadGameWithRedirectChain();
-                
-                // محاولة إخفاء الأدلة
-                setTimeout(() => {
-                    document.getElementById('fakeUrl').style.display = 'none';
-                }, 3000);
-            }, 100);
-        };
-
-        // ============ طرق احتياطية ============
-        // إذا فشلت كل الطرق، جرب هذه الحيل الإضافية
-        
-        // 1. استخدم iframe مع sandbox أقل تقييداً
-        function fallbackMethod1() {
-            const iframe = document.createElement('iframe');
-            iframe.src = 'https://blocops.io/';
-            iframe.style.cssText = 'width:100%;height:100%;border:none;';
-            
-            // إعدادات sandbox أقل تقييداً
-            iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-forms allow-pointer-lock allow-downloads allow-modals';
-            iframe.allow = 'autoplay; fullscreen; gamepad; microphone; camera';
-            iframe.allowfullscreen = true;
-            
-            document.getElementById('gameContainer').appendChild(iframe);
+            // إذا فشلت جميع البروكسيات، جرب التضمين المباشر
+            document.getElementById('game').src = 'https://blocops.io/';
         }
         
-        // 2. استخدم object embed كبديل
-        function fallbackMethod2() {
-            const embedCode = `
-                <object 
-                    width="100%" 
-                    height="100%" 
-                    data="https://blocops.io/"
-                    type="text/html">
-                    <embed 
-                        src="https://blocops.io/" 
-                        width="100%" 
-                        height="100%">
-                    </embed>
-                </object>
-            `;
-            
-            document.getElementById('gameContainer').innerHTML = embedCode;
-        }
-        
-        // 3. المحاولة النهائية
-        window.addEventListener('error', function(e) {
-            console.log('خطأ:', e.message);
-            // إذا فشلت كل الطرق، جرب البدائل
-            if (e.message.includes('CORS') || e.message.includes('origin')) {
-                document.getElementById('gameContainer').innerHTML = `
-                    <div style="color:white;padding:20px;text-align:center;">
-                        <h2>تعذر تحميل اللعبة مباشرة</h2>
-                        <p>جاري استخدام طريقة بديلة...</p>
-                    </div>
-                `;
-                setTimeout(fallbackMethod1, 1000);
-            }
-        });
+        tryLoadGame();
     </script>
 </body>
 </html>
