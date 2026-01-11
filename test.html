@@ -3,75 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة بلوكوبس - Crazy Games</title>
+    <title>لعبة بلوكوبس</title>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background: #f0f0f0;
-            font-family: Arial, sans-serif;
+        body { margin: 0; padding: 0; background: #1a1a2e; }
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-        iframe {
+        #gameFrame {
             width: 100%;
-            height: 600px;
+            height: 100%;
             border: none;
-            border-radius: 8px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>لعبة بلوكوبس - Crazy Games</h1>
-            <p>اللعبة تعمل من داخل موقع Crazy Games الرسمي</p>
-        </div>
-        
-        <!-- iframe يخفي المصدر الحقيقي -->
-        <iframe 
-            id="gameFrame"
-            src="https://games.crazygames.com/en_US/blocops/index.html"
-            allow="autoplay; fullscreen; gamepad" 
-            allowfullscreen>
-        </iframe>
-        
-        <div style="text-align: center; margin-top: 15px;">
-            <small>جميع الحقوق محفوظة لـ Crazy Games</small>
-        </div>
+    <div id="gameContainer">
+        <iframe id="gameFrame" allowfullscreen></iframe>
     </div>
 
     <script>
-        // محاولة تغيير الـ Referer (قد لا يعمل في جميع المتصفحات بسبب سياسات الأمان)
-        window.addEventListener('load', function() {
-            const iframe = document.getElementById('gameFrame');
+        // استخدام proxy لتجاوز قيود CORS
+        async function loadGameWithProxy() {
+            const gameUrl = 'https://games.crazygames.com/en_US/blocops/index.html';
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy
             
-            // إضافة رؤوس HTTP إضافية (قد يحتاج إلى تكوين خاص في السيرفر)
-            const originalSrc = iframe.src;
-            iframe.src = '';
-            
-            // محاولة إرسال طلب مع رؤوس مخصصة
-            fetch(originalSrc, {
-                headers: {
-                    'Referer': 'https://www.crazygames.com/',
-                    'Origin': 'https://www.crazygames.com'
-                },
-                mode: 'no-cors'
-            }).catch(() => {
-                // العودة إلى الطريقة العادية إذا فشلت
-                iframe.src = originalSrc;
-            });
-        });
+            try {
+                // أولاً: جلب الصفحة عبر proxy
+                const response = await fetch(proxyUrl + gameUrl, {
+                    headers: {
+                        'Origin': 'https://www.crazygames.com',
+                        'Referer': 'https://www.crazygames.com/',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const html = await response.text();
+                
+                // إنشاء blob URL لعرض المحتوى
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                
+                document.getElementById('gameFrame').src = url;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                // الرجوع إلى الطريقة المباشرة
+                document.getElementById('gameFrame').src = gameUrl;
+            }
+        }
+        
+        // بديل: استخدام proxy مخصص
+        function loadGameWithCustomProxy() {
+            // يمكنك إنشاء proxy خاص بك على سيرفر node.js
+            // ثم استخدامه مثل:
+            // document.getElementById('gameFrame').src = 'https://your-proxy.com/proxy?url=' + encodeURIComponent(gameUrl);
+        }
+        
+        window.onload = loadGameWithProxy;
     </script>
 </body>
 </html>
