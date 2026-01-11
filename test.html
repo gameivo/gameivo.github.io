@@ -1,21 +1,77 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8"/>
-  <title>BLOCOPS - Third-Party Embed</title>
-  <style>html,body{margin:0;height:100%;background:#000}iframe{width:100%;height:100%;border:none}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة بلوكوبس - Crazy Games</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 8px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-  <iframe id="g" allowfullscreen></iframe>
+    <div class="container">
+        <div class="header">
+            <h1>لعبة بلوكوبس - Crazy Games</h1>
+            <p>اللعبة تعمل من داخل موقع Crazy Games الرسمي</p>
+        </div>
+        
+        <!-- iframe يخفي المصدر الحقيقي -->
+        <iframe 
+            id="gameFrame"
+            src="https://games.crazygames.com/en_US/blocops/index.html"
+            allow="autoplay; fullscreen; gamepad" 
+            allowfullscreen>
+        </iframe>
+        
+        <div style="text-align: center; margin-top: 15px;">
+            <small>جميع الحقوق محفوظة لـ Crazy Games</small>
+        </div>
+    </div>
 
-  <script>
-    const realGame = "https://games.crazygames.com/en_US/blocops/index.html";
-    // proxy يُخفي Origin ويُعيد كتابة الهيدرز
-    const proxy = "https://proxy.cors.sh/";
-    const url = proxy + realGame;
-
-    const f = document.getElementById("g");
-    f.src = url; // نحمل اللعبة عبر proxy
-  </script>
+    <script>
+        // محاولة تغيير الـ Referer (قد لا يعمل في جميع المتصفحات بسبب سياسات الأمان)
+        window.addEventListener('load', function() {
+            const iframe = document.getElementById('gameFrame');
+            
+            // إضافة رؤوس HTTP إضافية (قد يحتاج إلى تكوين خاص في السيرفر)
+            const originalSrc = iframe.src;
+            iframe.src = '';
+            
+            // محاولة إرسال طلب مع رؤوس مخصصة
+            fetch(originalSrc, {
+                headers: {
+                    'Referer': 'https://www.crazygames.com/',
+                    'Origin': 'https://www.crazygames.com'
+                },
+                mode: 'no-cors'
+            }).catch(() => {
+                // العودة إلى الطريقة العادية إذا فشلت
+                iframe.src = originalSrc;
+            });
+        });
+    </script>
 </body>
 </html>
