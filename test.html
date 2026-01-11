@@ -1,76 +1,21 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8"/>
-  <title>BLOCOPS - بدون تحديث</title>
-  <style>
-    html,body{margin:0;height:100%;background:#000}
-    #gameFrame{width:100%;height:100%;border:none}
-    #loadingScreen{position:fixed;inset:0;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;z-index:10}
-    .loader{border:4px solid #333;border-top-color:#ff6b00;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+  <meta charset="utf-8"/>
+  <title>BLOCOPS - Third-Party Embed</title>
+  <style>html,body{margin:0;height:100%;background:#000}iframe{width:100%;height:100%;border:none}</style>
 </head>
 <body>
-  <div id="loadingScreen">
-    <div class="loader"></div>
-  </div>
-
-  <!-- الـ iframe الخفي -->
-  <iframe id="gameFrame" allowfullscreen></iframe>
+  <iframe id="g" allowfullscreen></iframe>
 
   <script>
-    /* ====== 1) نُعطي المصدر المقبول ====== */
-    const GAME_URL = "https://blocops.io";
+    const realGame = "https://games.crazygames.com/en_US/blocops/index.html";
+    // proxy يُخفي Origin ويُعيد كتابة الهيدرز
+    const proxy = "https://proxy.cors.sh/";
+    const url = proxy + realGame;
 
-    /* ====== 2) نُحمل اللعبة داخل الـ iframe ====== */
-    const iframe = document.getElementById("gameFrame");
-    iframe.src = GAME_URL;
-
-    /* ====== 3) بعد ما تتحمل الصفحة نُخفي شاشة التحميل ====== */
-    iframe.onload = () => {
-      document.getElementById("loadingScreen").style.display = "none";
-      iframe.style.display = "block";
-
-      /* ====== 4) نعترض أي "click" داخل الـ iframe ====== */
-      hijackPlayButton();
-    };
-
-    /* ====== 5) دالة الاعتراض ====== */
-    function hijackPlayButton() {
-      try {
-        // نُ inject سكريبت صغير داخل الـ iframe نفسه
-        const script = iframe.contentDocument.createElement("script");
-        script.textContent = `
-          document.addEventListener("click", function (e) {
-            // إذا كان العنصر المضغوط زرّ أو يحتوي كلمة play
-            const txt = e.target.textContent.trim().toLowerCase();
-            if (txt.includes("play") || e.target.tagName === "BUTTON") {
-              // نمنع الإجراء الافتراضي (إعادة التحميل)
-              e.preventDefault();
-              e.stopPropagation();
-              // نُرسل رسالة لل parent (هذه الصفحة) ليفتح اللعبة
-              window.parent.postMessage("playPressed", "*");
-            }
-          });
-        `;
-        iframe.contentDocument.documentElement.appendChild(script);
-      } catch (e) {
-        // في حال Same-Origin block نستخدم plan-B
-        window.addEventListener("message", handleMessage);
-      }
-    }
-
-    /* ====== 6) عند استقبال رسالة "playPressed" نفتح اللعبة ====== */
-    function handleMessage(event) {
-      if (event.data === "playPressed") {
-        // نفتح اللعبة في نافذة جديدة بدون مشاكل
-        window.open(GAME_URL, "_blank");
-      }
-    }
-
-    // تأكيد استقبال الرسالة
-    window.addEventListener("message", handleMessage);
+    const f = document.getElementById("g");
+    f.src = url; // نحمل اللعبة عبر proxy
   </script>
 </body>
 </html>
